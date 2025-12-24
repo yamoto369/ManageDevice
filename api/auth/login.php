@@ -29,8 +29,8 @@ if (empty($email) || empty($password)) {
 try {
     $db = getDB();
     
-    // Find user by email
-    $stmt = $db->prepare("SELECT id, email, password, name, avatar FROM users WHERE email = ?");
+    // Find user by email (include role and status)
+    $stmt = $db->prepare("SELECT id, email, password, name, avatar, role, status FROM users WHERE email = ?");
     $stmt->execute([$email]);
     $user = $stmt->fetch();
     
@@ -38,7 +38,7 @@ try {
         jsonResponse(['success' => false, 'message' => 'Email hoặc mật khẩu không đúng'], 401);
     }
     
-    // Create session
+    // Create session (even for pending users - they'll see pending page)
     startSession();
     $_SESSION['user_id'] = $user['id'];
     

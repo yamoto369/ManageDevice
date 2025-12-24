@@ -1,6 +1,6 @@
 <?php
 /**
- * Members Page
+ * Members Page - With Role Management
  */
 require_once 'config/database.php';
 requireAuth();
@@ -9,6 +9,8 @@ define('PAGE_TITLE', 'Quản lý thành viên');
 require_once 'includes/header.php';
 
 $currentUserId = getCurrentUserId();
+$canApprove = canApproveMembers();
+$canManageRoles = isAdmin();
 ?>
 
 <main class="flex-1 overflow-y-auto p-4 md:p-8 lg:px-12">
@@ -32,18 +34,23 @@ $currentUserId = getCurrentUserId();
         <!-- Members Table -->
         <div class="bg-white dark:bg-[#15202b] rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden flex flex-col">
             <div class="overflow-x-auto">
-                <table class="w-full min-w-[800px] text-left border-collapse">
+                <table class="w-full min-w-[900px] text-left border-collapse">
                     <thead class="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-700">
                         <tr>
-                            <th class="px-6 py-4 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider w-16">Avatar</th>
-                            <th class="px-6 py-4 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider w-1/4">Thông tin thành viên</th>
-                            <th class="px-6 py-4 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider w-1/5">Biệt danh (Alias)</th>
-                            <th class="px-6 py-4 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider w-1/3">Thiết bị đang giữ</th>
+                            <th class="px-4 py-4 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider w-12">Avatar</th>
+                            <th class="px-4 py-4 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Thông tin</th>
+                            <th class="px-4 py-4 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider w-24">Role</th>
+                            <th class="px-4 py-4 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider w-28">Trạng thái</th>
+                            <th class="px-4 py-4 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Biệt danh</th>
+                            <th class="px-4 py-4 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Thiết bị</th>
+                            <?php if ($canApprove || $canManageRoles): ?>
+                            <th class="px-4 py-4 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider w-28 text-right">Hành động</th>
+                            <?php endif; ?>
                         </tr>
                     </thead>
                     <tbody id="members-table" class="divide-y divide-slate-100 dark:divide-slate-800">
                         <tr>
-                            <td colspan="4" class="px-6 py-8 text-center text-slate-500">
+                            <td colspan="7" class="px-6 py-8 text-center text-slate-500">
                                 <span class="material-symbols-outlined text-4xl mb-2">hourglass_empty</span>
                                 <p>Đang tải...</p>
                             </td>
@@ -94,11 +101,124 @@ $currentUserId = getCurrentUserId();
     </div>
 </main>
 
+<!-- Role Change Modal -->
+<div id="role-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+    <div class="bg-white dark:bg-[#1a2632] rounded-xl shadow-2xl max-w-md w-full mx-4 p-6">
+        <div class="flex items-center gap-3 mb-4">
+            <div class="p-2 rounded-lg bg-primary/10 text-primary">
+                <span class="material-symbols-outlined">admin_panel_settings</span>
+            </div>
+            <h3 class="text-lg font-bold text-slate-900 dark:text-white">Thay đổi Role</h3>
+        </div>
+        <p id="role-modal-text" class="text-slate-600 dark:text-slate-400 mb-4">Chọn role cho thành viên:</p>
+        <input type="hidden" id="role-modal-user-id">
+        <div class="flex flex-col gap-2 mb-6">
+            <label class="flex items-center gap-3 p-3 rounded-lg border border-slate-200 dark:border-slate-600 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800">
+                <input type="radio" name="role-select" value="user" class="text-primary focus:ring-primary">
+                <div>
+                    <p class="font-medium text-slate-900 dark:text-white">User</p>
+                    <p class="text-xs text-slate-500">Xem danh sách và đặt alias</p>
+                </div>
+            </label>
+            <label class="flex items-center gap-3 p-3 rounded-lg border border-slate-200 dark:border-slate-600 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800">
+                <input type="radio" name="role-select" value="mod" class="text-primary focus:ring-primary">
+                <div>
+                    <p class="font-medium text-slate-900 dark:text-white">Moderator</p>
+                    <p class="text-xs text-slate-500">Sửa thiết bị và phê duyệt thành viên</p>
+                </div>
+            </label>
+            <label class="flex items-center gap-3 p-3 rounded-lg border border-slate-200 dark:border-slate-600 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800">
+                <input type="radio" name="role-select" value="admin" class="text-primary focus:ring-primary">
+                <div>
+                    <p class="font-medium text-slate-900 dark:text-white">Admin</p>
+                    <p class="text-xs text-slate-500">Toàn quyền quản lý hệ thống</p>
+                </div>
+            </label>
+        </div>
+        <div class="flex gap-3 justify-end">
+            <button onclick="closeRoleModal()" class="px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 font-medium hover:bg-slate-100 dark:hover:bg-slate-700">Hủy</button>
+            <button onclick="saveRole()" class="px-4 py-2 rounded-lg bg-primary text-white font-medium hover:bg-blue-600">Lưu thay đổi</button>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirm Modal -->
+<div id="delete-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+    <div class="bg-white dark:bg-[#1a2632] rounded-xl shadow-2xl max-w-md w-full mx-4 p-6">
+        <div class="flex items-center gap-3 mb-4">
+            <div class="p-2 rounded-lg bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400">
+                <span class="material-symbols-outlined">warning</span>
+            </div>
+            <h3 class="text-lg font-bold text-slate-900 dark:text-white">Xác nhận xóa</h3>
+        </div>
+        <p id="delete-modal-text" class="text-slate-600 dark:text-slate-400 mb-6">Bạn có chắc chắn muốn xóa thành viên này? Hành động này không thể hoàn tác.</p>
+        <input type="hidden" id="delete-modal-user-id">
+        <div class="flex gap-3 justify-end">
+            <button onclick="closeDeleteModal()" class="px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 font-medium hover:bg-slate-100 dark:hover:bg-slate-700">Hủy</button>
+            <button onclick="confirmDelete()" class="px-4 py-2 rounded-lg bg-red-600 text-white font-medium hover:bg-red-700">Xóa thành viên</button>
+        </div>
+    </div>
+</div>
+
 <script>
 const currentUserId = <?php echo $currentUserId; ?>;
+const canApprove = <?php echo $canApprove ? 'true' : 'false'; ?>;
+const canManageRoles = <?php echo $canManageRoles ? 'true' : 'false'; ?>;
 let currentPage = 1;
 let totalPages = 1;
 let editingUserId = null;
+
+function getRoleBadge(role) {
+    const badges = {
+        'admin': '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">Admin</span>',
+        'mod': '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">Mod</span>',
+        'user': '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300">User</span>'
+    };
+    return badges[role] || badges['user'];
+}
+
+function getStatusBadge(status) {
+    if (status === 'approved') {
+        return '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"><span class="material-symbols-outlined text-[12px]">check_circle</span>Đã duyệt</span>';
+    }
+    return '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400"><span class="material-symbols-outlined text-[12px]">schedule</span>Chờ duyệt</span>';
+}
+
+function getActionButtons(member) {
+    if (member.id == currentUserId) return '';
+    
+    let buttons = [];
+    
+    // Approve button (for pending members, visible to mod/admin)
+    if (canApprove && member.status === 'pending') {
+        buttons.push(`
+            <button onclick="approveMember(${member.id}, '${member.name}')" title="Phê duyệt" 
+                class="p-1.5 rounded-lg bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-400 dark:hover:bg-green-900/50">
+                <span class="material-symbols-outlined text-[18px]">check</span>
+            </button>
+        `);
+    }
+    
+    // Role change button (admin only)
+    if (canManageRoles) {
+        buttons.push(`
+            <button onclick="openRoleModal(${member.id}, '${member.name}', '${member.role}')" title="Thay đổi role"
+                class="p-1.5 rounded-lg bg-primary/10 text-primary hover:bg-primary/20">
+                <span class="material-symbols-outlined text-[18px]">admin_panel_settings</span>
+            </button>
+        `);
+        
+        // Delete button (admin only)
+        buttons.push(`
+            <button onclick="openDeleteModal(${member.id}, '${member.name}')" title="Xóa thành viên"
+                class="p-1.5 rounded-lg bg-red-100 text-red-600 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-900/50">
+                <span class="material-symbols-outlined text-[18px]">delete</span>
+            </button>
+        `);
+    }
+    
+    return buttons.length > 0 ? `<div class="flex gap-1 justify-end">${buttons.join('')}</div>` : '';
+}
 
 async function loadMembers() {
     const search = document.getElementById('search-input').value;
@@ -111,49 +231,56 @@ async function loadMembers() {
     
     const result = await API.get(`api/members/list.php?${params}`);
     const tbody = document.getElementById('members-table');
+    const colSpan = (canApprove || canManageRoles) ? 7 : 6;
     
     if (result.success && result.data.length > 0) {
         tbody.innerHTML = result.data.map(member => `
             <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors group">
-                <td class="px-6 py-4 align-top">
+                <td class="px-4 py-4 align-top">
                     <div class="size-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold ring-2 ring-white dark:ring-slate-700">
                         ${member.name.charAt(0).toUpperCase()}
                     </div>
                 </td>
-                <td class="px-6 py-4 align-top">
+                <td class="px-4 py-4 align-top">
                     <div class="flex flex-col">
                         <span class="text-sm font-semibold text-slate-900 dark:text-white">${member.name}</span>
                         <span class="text-xs text-slate-500 dark:text-slate-400">${member.email}</span>
                     </div>
                 </td>
-                <td class="px-6 py-4 align-top">
-                    ${member.id != currentUserId ? (member.alias ? `
-                        <button onclick="openAliasPanel(${member.id}, '${member.name}', '${member.alias}')" class="group/alias flex items-center gap-2 px-3 py-1.5 rounded-lg bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/30 text-primary text-sm font-medium transition-colors w-fit">
-                            <span>${member.alias}</span>
-                            <span class="material-symbols-outlined text-[16px] opacity-0 group-hover/alias:opacity-100 transition-opacity">edit</span>
-                        </button>
-                        <p class="text-[10px] text-slate-400 mt-1 italic">Chỉ bạn mới thấy</p>
-                    ` : `
-                        <button onclick="openAliasPanel(${member.id}, '${member.name}', '')" class="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-dashed border-slate-300 dark:border-slate-600 hover:border-primary hover:text-primary text-slate-500 dark:text-slate-400 text-sm font-normal transition-colors w-fit group/btn">
-                            <span class="material-symbols-outlined text-[16px]">add</span>
-                            <span>Đặt biệt danh</span>
-                        </button>
-                    `) : `<span class="text-slate-400 text-sm italic">Tài khoản của bạn</span>`}
+                <td class="px-4 py-4 align-top">
+                    ${getRoleBadge(member.role)}
                 </td>
-                <td class="px-6 py-4 align-top">
-                    <div class="flex flex-wrap gap-2">
-                        ${member.devices.length > 0 ? member.devices.map(d => `
-                            <span class="inline-flex items-center gap-1.5 rounded-md bg-slate-100 dark:bg-slate-800 px-2.5 py-1 text-xs font-medium text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
-                                <span class="material-symbols-outlined text-[14px]">${getDeviceIcon(d.name)}</span>
-                                ${d.name}
+                <td class="px-4 py-4 align-top">
+                    ${getStatusBadge(member.status)}
+                </td>
+                <td class="px-4 py-4 align-top">
+                    ${member.id != currentUserId ? (member.alias ? `
+                        <button onclick="openAliasPanel(${member.id}, '${member.name}', '${member.alias}')" class="group/alias flex items-center gap-2 px-2 py-1 rounded-lg bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/30 text-primary text-xs font-medium transition-colors w-fit">
+                            <span>${member.alias}</span>
+                            <span class="material-symbols-outlined text-[14px] opacity-0 group-hover/alias:opacity-100">edit</span>
+                        </button>
+                    ` : `
+                        <button onclick="openAliasPanel(${member.id}, '${member.name}', '')" class="flex items-center gap-1 px-2 py-1 rounded-lg border border-dashed border-slate-300 dark:border-slate-600 hover:border-primary hover:text-primary text-slate-400 text-xs transition-colors w-fit">
+                            <span class="material-symbols-outlined text-[14px]">add</span>
+                            <span>Alias</span>
+                        </button>
+                    `) : `<span class="text-slate-400 text-xs italic">Bạn</span>`}
+                </td>
+                <td class="px-4 py-4 align-top">
+                    <div class="flex flex-wrap gap-1">
+                        ${member.devices.length > 0 ? member.devices.slice(0, 3).map(d => `
+                            <span class="inline-flex items-center gap-1 rounded bg-slate-100 dark:bg-slate-800 px-2 py-0.5 text-[10px] font-medium text-slate-600 dark:text-slate-300">
+                                <span class="material-symbols-outlined text-[12px]">${getDeviceIcon(d.name)}</span>
+                                ${d.name.length > 15 ? d.name.substring(0, 15) + '...' : d.name}
                             </span>
-                        `).join('') : `<span class="text-slate-400 text-sm italic">Không có thiết bị</span>`}
+                        `).join('') : `<span class="text-slate-400 text-xs italic">Không có</span>`}
+                        ${member.devices.length > 3 ? `<span class="text-xs text-slate-400">+${member.devices.length - 3}</span>` : ''}
                     </div>
                 </td>
+                ${(canApprove || canManageRoles) ? `<td class="px-4 py-4 align-top">${getActionButtons(member)}</td>` : ''}
             </tr>
         `).join('');
         
-        // Update pagination
         totalPages = result.pagination.total_pages;
         const total = result.pagination.total;
         document.getElementById('pagination-info').textContent = `Hiển thị ${result.data.length} trong số ${total} thành viên`;
@@ -162,7 +289,7 @@ async function loadMembers() {
     } else {
         tbody.innerHTML = `
             <tr>
-                <td colspan="4" class="px-6 py-8 text-center text-slate-500">
+                <td colspan="${colSpan}" class="px-6 py-8 text-center text-slate-500">
                     <span class="material-symbols-outlined text-4xl mb-2">group</span>
                     <p>Không tìm thấy thành viên</p>
                 </td>
@@ -171,6 +298,68 @@ async function loadMembers() {
     }
 }
 
+// Approve member
+async function approveMember(userId, userName) {
+    const result = await API.post('api/members/approve.php', { user_id: userId });
+    if (result.success) {
+        Toast.success(result.message);
+        loadMembers();
+    } else {
+        Toast.error(result.message);
+    }
+}
+
+// Role Modal
+function openRoleModal(userId, userName, currentRole) {
+    document.getElementById('role-modal-user-id').value = userId;
+    document.getElementById('role-modal-text').textContent = `Chọn role cho ${userName}:`;
+    document.querySelector(`input[name="role-select"][value="${currentRole}"]`).checked = true;
+    document.getElementById('role-modal').classList.remove('hidden');
+}
+
+function closeRoleModal() {
+    document.getElementById('role-modal').classList.add('hidden');
+}
+
+async function saveRole() {
+    const userId = document.getElementById('role-modal-user-id').value;
+    const role = document.querySelector('input[name="role-select"]:checked').value;
+    
+    const result = await API.post('api/members/update-role.php', { user_id: userId, role: role });
+    if (result.success) {
+        Toast.success(result.message);
+        closeRoleModal();
+        loadMembers();
+    } else {
+        Toast.error(result.message);
+    }
+}
+
+// Delete Modal
+function openDeleteModal(userId, userName) {
+    document.getElementById('delete-modal-user-id').value = userId;
+    document.getElementById('delete-modal-text').textContent = `Bạn có chắc chắn muốn xóa thành viên "${userName}"? Hành động này không thể hoàn tác.`;
+    document.getElementById('delete-modal').classList.remove('hidden');
+}
+
+function closeDeleteModal() {
+    document.getElementById('delete-modal').classList.add('hidden');
+}
+
+async function confirmDelete() {
+    const userId = document.getElementById('delete-modal-user-id').value;
+    
+    const result = await API.post('api/members/delete.php', { user_id: userId });
+    if (result.success) {
+        Toast.success(result.message);
+        closeDeleteModal();
+        loadMembers();
+    } else {
+        Toast.error(result.message);
+    }
+}
+
+// Alias functions
 function openAliasPanel(userId, userName, currentAlias) {
     editingUserId = userId;
     document.getElementById('alias-title').textContent = `Đặt biệt danh cho ${userName}`;
@@ -230,6 +419,14 @@ function debounce(func, wait) {
         timeout = setTimeout(() => func.apply(this, args), wait);
     };
 }
+
+// Close modals on outside click
+document.getElementById('role-modal').addEventListener('click', (e) => {
+    if (e.target === e.currentTarget) closeRoleModal();
+});
+document.getElementById('delete-modal').addEventListener('click', (e) => {
+    if (e.target === e.currentTarget) closeDeleteModal();
+});
 
 loadMembers();
 </script>

@@ -9,6 +9,8 @@ define('PAGE_TITLE', 'Danh sách thiết bị');
 require_once 'includes/header.php';
 
 $currentUserId = getCurrentUserId();
+$canManage = canManageDevices();
+$canEdit = canEditDevices();
 ?>
 
 <!-- Main Content Area -->
@@ -19,10 +21,12 @@ $currentUserId = getCurrentUserId();
             <h1 class="text-[#0d141b] dark:text-white text-3xl font-black leading-tight tracking-[-0.033em]">Danh sách thiết bị</h1>
             <p class="text-slate-500 dark:text-slate-400 text-sm mt-1">Quản lý toàn bộ thiết bị công nghệ của đội ngũ</p>
         </div>
+        <?php if ($canManage): ?>
         <a href="add-device.php" class="flex shrink-0 cursor-pointer items-center justify-center gap-2 overflow-hidden rounded-lg h-10 px-5 bg-primary hover:bg-blue-600 text-white text-sm font-bold leading-normal tracking-[0.015em] transition-colors shadow-sm">
             <span class="material-symbols-outlined text-[20px]">add</span>
             <span class="truncate">Thêm thiết bị</span>
         </a>
+        <?php endif; ?>
     </div>
     
     <!-- Controls Bar: Search & Filters -->

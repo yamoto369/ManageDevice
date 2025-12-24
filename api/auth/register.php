@@ -55,27 +55,54 @@ try {
         jsonResponse(['success' => false, 'message' => 'Email đã được sử dụng'], 400);
     }
     
+    // Check if this is the first user (will be admin)
+    $stmt = $db->prepare("SELECT COUNT(*) as count FROM users");
+    $stmt->execute();
+    $userCount = $stmt->fetch()['count'];
+    
+    $isFirstUser = ($userCount == 0);
+    $role = $isFirstUser ? 'admin' : 'user';
+    $status = $isFirstUser ? 'approved' : 'pending';
+    
     // Hash password and insert user
     $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
     
-    $stmt = $db->prepare("INSERT INTO users (email, password, name) VALUES (?, ?, ?)");
-    $stmt->execute([$email, $hashedPassword, $name]);
+    $stmt = $db->prepare("INSERT INTO users (email, password, name, role, status) VALUES (?, ?, ?, ?, ?)");
+    $stmt->execute([$email, $hashedPassword, $name, $role, $status]);
     
     $userId = $db->lastInsertId();
     
-    // Auto login after registration
-    startSession();
-    $_SESSION['user_id'] = $userId;
-    
-    jsonResponse([
-        'success' => true,
-        'message' => 'Đăng ký thành công',
-        'user' => [
-            'id' => $userId,
-            'email' => $email,
-            'name' => $name
-        ]
-    ]);
+    // Auto login only for approved users (first user)
+    if ($status === 'approved') {
+        startSession();
+        $_SESSION['user_id'] = $userId;
+        
+        jsonResponse([
+            'success' => true,
+            'message' => 'Đăng ký thành công',
+            'user' => [
+                'id' => $userId,
+                'email' => $email,
+                'name' => $name,
+                'role' => $role,
+                'status' => $status
+            ]
+        ]);
+    } else {
+        // Pending user - don't auto login
+        jsonResponse([
+            'success' => true,
+            'message' => 'Đăng ký thành công. Vui lòng chờ admin phê duyệt tài khoản của bạn.',
+            'pending' => true,
+            'user' => [
+                'id' => $userId,
+                'email' => $email,
+                'name' => $name,
+                'role' => $role,
+                'status' => $status
+            ]
+        ]);
+    }
     
 } catch (PDOException $e) {
     jsonResponse(['success' => false, 'message' => 'Đã xảy ra lỗi'], 500);

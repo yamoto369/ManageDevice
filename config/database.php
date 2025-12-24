@@ -73,7 +73,7 @@ function getCurrentUser() {
     }
     
     $db = getDB();
-    $stmt = $db->prepare("SELECT id, email, name, avatar, created_at FROM users WHERE id = ?");
+    $stmt = $db->prepare("SELECT id, email, name, avatar, role, status, created_at FROM users WHERE id = ?");
     $stmt->execute([$_SESSION['user_id']]);
     return $stmt->fetch();
 }
@@ -85,6 +85,103 @@ function requireAuth() {
     if (!isLoggedIn()) {
         header('Location: index.php');
         exit;
+    }
+}
+
+/**
+ * Require user to be approved - redirect to pending page if not
+ */
+function requireApproved() {
+    $user = getCurrentUser();
+    if (!$user || $user['status'] !== 'approved') {
+        header('Location: pending.php');
+        exit;
+    }
+}
+
+/**
+ * Get current user's role
+ * @return string|null
+ */
+function getUserRole() {
+    $user = getCurrentUser();
+    return $user ? $user['role'] : null;
+}
+
+/**
+ * Get current user's status
+ * @return string|null
+ */
+function getUserStatus() {
+    $user = getCurrentUser();
+    return $user ? $user['status'] : null;
+}
+
+/**
+ * Check if current user has specific role
+ * @param string $role
+ * @return bool
+ */
+function hasRole($role) {
+    return getUserRole() === $role;
+}
+
+/**
+ * Check if current user is admin
+ * @return bool
+ */
+function isAdmin() {
+    return hasRole('admin');
+}
+
+/**
+ * Check if current user is mod
+ * @return bool
+ */
+function isMod() {
+    return hasRole('mod');
+}
+
+/**
+ * Check if current user can approve members (mod or admin)
+ * @return bool
+ */
+function canApproveMembers() {
+    $role = getUserRole();
+    return in_array($role, ['mod', 'admin']);
+}
+
+/**
+ * Check if current user can edit devices (mod or admin)
+ * @return bool
+ */
+function canEditDevices() {
+    $role = getUserRole();
+    return in_array($role, ['mod', 'admin']);
+}
+
+/**
+ * Check if current user can manage devices (add/delete - admin only)
+ * @return bool
+ */
+function canManageDevices() {
+    return isAdmin();
+}
+
+/**
+ * Require specific role(s) - for API endpoints
+ * @param array $allowedRoles
+ */
+function requireRole($allowedRoles) {
+    $user = getCurrentUser();
+    if (!$user) {
+        jsonResponse(['success' => false, 'message' => 'Unauthorized'], 401);
+    }
+    if ($user['status'] !== 'approved') {
+        jsonResponse(['success' => false, 'message' => 'Tài khoản chưa được phê duyệt'], 403);
+    }
+    if (!in_array($user['role'], $allowedRoles)) {
+        jsonResponse(['success' => false, 'message' => 'Không có quyền thực hiện thao tác này'], 403);
     }
 }
 

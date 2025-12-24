@@ -12,10 +12,12 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     jsonResponse(['success' => false, 'message' => 'Method not allowed'], 405);
 }
 
-// Require authentication
+// Require authentication and admin role
 if (!isLoggedIn()) {
     jsonResponse(['success' => false, 'message' => 'Unauthorized'], 401);
 }
+
+requireRole(['admin']);
 
 // Get input data
 $input = json_decode(file_get_contents('php://input'), true);

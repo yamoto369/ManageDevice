@@ -1,9 +1,16 @@
 <?php
 /**
  * Add Device Page
+ * Admin only
  */
 require_once 'config/database.php';
 requireAuth();
+
+// Only admin can add devices
+if (!canManageDevices()) {
+    header('Location: devices.php');
+    exit;
+}
 
 define('PAGE_TITLE', 'Thêm thiết bị mới');
 require_once 'includes/header.php';

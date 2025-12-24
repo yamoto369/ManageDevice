@@ -218,7 +218,12 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
         const data = await res.json();
         
         if (data.success) {
-            window.location.href = 'devices.php';
+            // Check if user is pending
+            if (data.user && data.user.status === 'pending') {
+                window.location.href = 'pending.php';
+            } else {
+                window.location.href = 'devices.php';
+            }
         } else {
             errorEl.textContent = data.message;
             errorEl.classList.remove('hidden');
@@ -248,7 +253,15 @@ document.getElementById('registerForm').addEventListener('submit', async (e) => 
         const data = await res.json();
         
         if (data.success) {
-            window.location.href = 'devices.php';
+            // Check if user is pending (needs approval)
+            if (data.pending) {
+                // Show success message in green instead of redirecting
+                errorEl.textContent = data.message;
+                errorEl.classList.remove('hidden', 'bg-red-50', 'border-red-200', 'text-red-700');
+                errorEl.classList.add('bg-green-50', 'border-green-200', 'text-green-700');
+            } else {
+                window.location.href = 'devices.php';
+            }
         } else {
             errorEl.textContent = data.message;
             errorEl.classList.remove('hidden');

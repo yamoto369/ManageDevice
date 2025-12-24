@@ -10,6 +10,22 @@ if (!defined('PAGE_TITLE')) {
 
 $currentUser = getCurrentUser();
 $currentPage = basename($_SERVER['PHP_SELF'], '.php');
+
+// Redirect pending users to pending page (except on pending.php itself)
+if ($currentUser && $currentUser['status'] === 'pending' && $currentPage !== 'pending') {
+    header('Location: pending.php');
+    exit;
+}
+
+// Helper function to get role badge HTML
+function getRoleBadge($role) {
+    $badges = [
+        'admin' => '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">Admin</span>',
+        'mod' => '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">Mod</span>',
+        'user' => ''
+    ];
+    return $badges[$role] ?? '';
+}
 ?>
 <!DOCTYPE html>
 <html class="light" lang="vi">
@@ -109,7 +125,10 @@ $currentPage = basename($_SERVER['PHP_SELF'], '.php');
                     <div class="bg-center bg-no-repeat bg-cover rounded-full size-10 border border-slate-200 dark:border-slate-600 bg-primary/10 flex items-center justify-center text-primary font-bold">
                         <?php echo strtoupper(substr($currentUser['name'] ?? 'U', 0, 1)); ?>
                     </div>
-                    <span class="hidden sm:block text-sm font-medium"><?php echo htmlspecialchars($currentUser['name'] ?? 'User'); ?></span>
+                    <span class="hidden sm:flex items-center gap-2">
+                        <span class="text-sm font-medium"><?php echo htmlspecialchars($currentUser['name'] ?? 'User'); ?></span>
+                        <?php echo getRoleBadge($currentUser['role'] ?? 'user'); ?>
+                    </span>
                 </button>
                 <div id="user-menu-dropdown" class="hidden absolute right-0 top-full mt-2 w-48 bg-white dark:bg-[#1a2632] rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-2">
                     <div class="px-4 py-2 border-b border-gray-100 dark:border-gray-700">

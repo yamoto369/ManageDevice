@@ -48,7 +48,7 @@ try {
     $total = $stmt->fetch()['total'];
     
     // Get members
-    $sql = "SELECT u.id, u.email, u.name, u.avatar, u.created_at
+    $sql = "SELECT u.id, u.email, u.name, u.avatar, u.role, u.status, u.created_at
             FROM users u
             {$whereClause}
             ORDER BY u.name ASC
