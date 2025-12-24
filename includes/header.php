@@ -59,16 +59,20 @@ $currentPage = basename($_SERVER['PHP_SELF'], '.php');
 <body class="bg-background-light dark:bg-background-dark text-[#0d141b] dark:text-slate-100 font-display min-h-screen flex flex-col overflow-x-hidden">
 
 <!-- Top Navigation -->
-<header class="sticky top-0 z-50 flex items-center justify-between whitespace-nowrap border-b border-solid border-b-[#e7edf3] dark:border-b-slate-700 bg-white dark:bg-[#1a2632] px-10 py-3 shadow-sm">
+<header class="sticky top-0 z-50 flex items-center justify-between whitespace-nowrap border-b border-solid border-b-[#e7edf3] dark:border-b-slate-700 bg-white dark:bg-[#1a2632] px-4 md:px-10 py-3 shadow-sm">
     <div class="flex items-center gap-4 text-[#0d141b] dark:text-white">
+        <!-- Mobile Menu Button -->
+        <button id="mobile-menu-btn" class="md:hidden flex items-center justify-center size-10 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
+            <span class="material-symbols-outlined text-2xl">menu</span>
+        </button>
         <a href="devices.php" class="flex items-center gap-3">
             <div class="size-8 text-primary flex items-center justify-center">
                 <span class="material-symbols-outlined text-3xl">devices</span>
             </div>
-            <h2 class="text-[#0d141b] dark:text-white text-lg font-bold leading-tight tracking-[-0.015em]">DeviceManager</h2>
+            <h2 class="hidden sm:block text-[#0d141b] dark:text-white text-lg font-bold leading-tight tracking-[-0.015em]">DeviceManager</h2>
         </a>
     </div>
-    <div class="flex flex-1 justify-end gap-8">
+    <div class="flex flex-1 justify-end gap-4 md:gap-8">
         <nav class="hidden md:flex items-center gap-9">
             <a class="text-sm font-medium leading-normal transition-colors <?php echo $currentPage == 'devices' ? 'text-[#0d141b] dark:text-slate-200 font-bold border-b-2 border-primary' : 'text-[#0d141b] dark:text-slate-200 hover:text-primary'; ?>" href="devices.php">Thiết bị</a>
             <a class="text-sm font-medium leading-normal transition-colors <?php echo $currentPage == 'pending-transfers' ? 'text-[#0d141b] dark:text-slate-200 font-bold border-b-2 border-primary' : 'text-[#0d141b] dark:text-slate-200 hover:text-primary'; ?>" href="pending-transfers.php">Yêu cầu</a>
@@ -122,4 +126,65 @@ $currentPage = basename($_SERVER['PHP_SELF'], '.php');
     </div>
 </header>
 
+<!-- Mobile Menu Dropdown -->
+<div id="mobile-menu" class="md:hidden hidden fixed top-[57px] left-0 right-0 z-40 bg-white dark:bg-[#1a2632] border-b border-[#e7edf3] dark:border-slate-700 shadow-lg transform transition-all duration-200 ease-out">
+    <nav class="flex flex-col py-2">
+        <a class="flex items-center gap-3 px-6 py-3 text-base font-medium transition-colors <?php echo $currentPage == 'devices' ? 'text-primary bg-primary/5 border-l-4 border-primary' : 'text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 border-l-4 border-transparent'; ?>" href="devices.php">
+            <span class="material-symbols-outlined text-xl">inventory_2</span>
+            Thiết bị
+        </a>
+        <a class="flex items-center gap-3 px-6 py-3 text-base font-medium transition-colors <?php echo $currentPage == 'pending-transfers' ? 'text-primary bg-primary/5 border-l-4 border-primary' : 'text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 border-l-4 border-transparent'; ?>" href="pending-transfers.php">
+            <span class="material-symbols-outlined text-xl">swap_horiz</span>
+            Yêu cầu chuyển giao
+        </a>
+        <a class="flex items-center gap-3 px-6 py-3 text-base font-medium transition-colors <?php echo $currentPage == 'members' ? 'text-primary bg-primary/5 border-l-4 border-primary' : 'text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 border-l-4 border-transparent'; ?>" href="members.php">
+            <span class="material-symbols-outlined text-xl">group</span>
+            Thành viên
+        </a>
+        <div class="border-t border-slate-100 dark:border-slate-700 my-2"></div>
+        <a class="flex items-center gap-3 px-6 py-3 text-base font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors border-l-4 border-transparent" href="api/auth/logout.php">
+            <span class="material-symbols-outlined text-xl">logout</span>
+            Đăng xuất
+        </a>
+    </nav>
+</div>
+
 <script src="js/app.js"></script>
+<script>
+// Mobile menu toggle
+document.addEventListener('DOMContentLoaded', function() {
+    const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+    const mobileMenu = document.getElementById('mobile-menu');
+    
+    if (mobileMenuBtn && mobileMenu) {
+        mobileMenuBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const isHidden = mobileMenu.classList.contains('hidden');
+            
+            if (isHidden) {
+                mobileMenu.classList.remove('hidden');
+                mobileMenuBtn.querySelector('.material-symbols-outlined').textContent = 'close';
+            } else {
+                mobileMenu.classList.add('hidden');
+                mobileMenuBtn.querySelector('.material-symbols-outlined').textContent = 'menu';
+            }
+        });
+        
+        // Close menu when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!mobileMenu.contains(e.target) && !mobileMenuBtn.contains(e.target)) {
+                mobileMenu.classList.add('hidden');
+                mobileMenuBtn.querySelector('.material-symbols-outlined').textContent = 'menu';
+            }
+        });
+        
+        // Close menu on window resize to desktop
+        window.addEventListener('resize', function() {
+            if (window.innerWidth >= 768) {
+                mobileMenu.classList.add('hidden');
+                mobileMenuBtn.querySelector('.material-symbols-outlined').textContent = 'menu';
+            }
+        });
+    }
+});
+</script>
