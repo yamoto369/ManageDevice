@@ -227,3 +227,37 @@ function getDisplayName($user, $viewerId = null) {
         'alias' => $alias
     ];
 }
+
+/**
+ * Check if current user has warehouse role
+ * @return bool
+ */
+function isWarehouse() {
+    return hasRole('warehouse');
+}
+
+/**
+ * Get the first user with warehouse role (for auto-assignment)
+ * Falls back to first admin if no warehouse user exists
+ * @return int|null
+ */
+function getFirstWarehouseUserId() {
+    $db = getDB();
+    
+    // First try to find a warehouse user
+    $stmt = $db->prepare("SELECT id FROM users WHERE role = 'warehouse' AND status = 'approved' ORDER BY id ASC LIMIT 1");
+    $stmt->execute();
+    $result = $stmt->fetch();
+    
+    if ($result) {
+        return $result['id'];
+    }
+    
+    // Fallback to first admin
+    $stmt = $db->prepare("SELECT id FROM users WHERE role = 'admin' AND status = 'approved' ORDER BY id ASC LIMIT 1");
+    $stmt->execute();
+    $result = $stmt->fetch();
+    
+    return $result ? $result['id'] : null;
+}
+

@@ -41,7 +41,7 @@ if (empty($name)) {
     jsonResponse(['success' => false, 'message' => 'Tên thiết bị là bắt buộc'], 400);
 }
 
-if (!in_array($status, ['available', 'in_use', 'broken', 'maintenance'])) {
+if (!in_array($status, ['available', 'broken'])) {
     jsonResponse(['success' => false, 'message' => 'Trạng thái không hợp lệ'], 400);
 }
 

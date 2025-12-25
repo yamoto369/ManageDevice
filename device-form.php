@@ -96,9 +96,7 @@ require_once 'includes/header.php';
                         <div class="relative">
                             <select name="status" class="form-select w-full cursor-pointer rounded-lg text-slate-900 dark:text-white bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-600 focus:border-primary focus:ring-primary h-12 px-4 text-base transition-all appearance-none">
                                 <option value="available">Sẵn sàng sử dụng</option>
-                                <option value="in_use">Đang mượn</option>
-                                <option value="maintenance">Đang bảo trì</option>
-                                <option value="broken">Hỏng / Cần sửa chữa</option>
+                                <option value="broken">Hỏng</option>
                             </select>
                             <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-500 dark:text-slate-400">
                                 <span class="material-symbols-outlined">expand_more</span>

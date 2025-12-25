@@ -59,12 +59,17 @@ try {
     }
     
     // Check if to_user exists
-    $stmt = $db->prepare("SELECT id, name FROM users WHERE id = ?");
+    $stmt = $db->prepare("SELECT id, name, role FROM users WHERE id = ?");
     $stmt->execute([$toUserId]);
     $toUser = $stmt->fetch();
     
     if (!$toUser) {
         jsonResponse(['success' => false, 'message' => 'Không tìm thấy người nhận'], 404);
+    }
+    
+    // If device is broken, can only transfer to warehouse users
+    if ($device['status'] === 'broken' && $toUser['role'] !== 'warehouse') {
+        jsonResponse(['success' => false, 'message' => 'Thiết bị hỏng chỉ có thể chuyển cho người quản lý kho (warehouse)'], 400);
     }
     
     // Determine request type

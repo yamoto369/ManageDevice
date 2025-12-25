@@ -165,11 +165,28 @@ async function loadUsers() {
     
     if (result.success) {
         const select = document.getElementById('to-user');
-        select.innerHTML = '<option value="">-- Chọn người nhận --</option>' + 
-            result.data
-                .filter(u => u.id != currentUserId)
-                .map(u => `<option value="${u.id}">${u.alias || u.name} (${u.email})</option>`)
-                .join('');
+        let users = result.data.filter(u => u.id != currentUserId);
+        
+        // If device is broken, only show warehouse users
+        if (device && device.status === 'broken') {
+            users = users.filter(u => u.role === 'warehouse');
+            
+            // Show info message about restriction
+            const infoEl = document.getElementById('form-info');
+            const infoText = document.getElementById('info-text');
+            infoText.innerHTML = '<strong>Thiết bị đang ở trạng thái hỏng.</strong> Chỉ có thể chuyển cho người quản lý kho (warehouse role).';
+            infoEl.classList.remove('hidden');
+        }
+        
+        if (users.length > 0) {
+            select.innerHTML = '<option value="">-- Chọn người nhận --</option>' + 
+                users.map(u => {
+                    const roleLabel = u.role === 'warehouse' ? ' [Kho]' : '';
+                    return `<option value="${u.id}">${u.alias || u.name}${roleLabel} (${u.email})</option>`;
+                }).join('');
+        } else {
+            select.innerHTML = '<option value="">Không có người nhận phù hợp</option>';
+        }
     }
 }
 

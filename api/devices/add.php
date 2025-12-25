@@ -42,7 +42,7 @@ if (empty($imei_sn)) {
     $errors[] = 'IMEI/Serial Number là bắt buộc';
 }
 
-if (!in_array($status, ['available', 'in_use', 'broken', 'maintenance'])) {
+if (!in_array($status, ['available', 'broken'])) {
     $status = 'available';
 }
 
@@ -61,10 +61,19 @@ try {
     }
     
     // Insert device
-    $stmt = $db->prepare("INSERT INTO devices (name, imei_sn, manufacturer, status, description) VALUES (?, ?, ?, ?, ?)");
-    $stmt->execute([$name, $imei_sn, $manufacturer, $status, $description]);
+    $stmt = $db->prepare("INSERT INTO devices (name, imei_sn, manufacturer, status, description, current_holder_id) VALUES (?, ?, ?, ?, ?, ?)");
+    
+    // Auto-assign to first warehouse user, or fallback to first admin
+    $holderId = getFirstWarehouseUserId();
+    $stmt->execute([$name, $imei_sn, $manufacturer, $status, $description, $holderId]);
     
     $deviceId = $db->lastInsertId();
+    
+    // Record assignment in history if holder was assigned
+    if ($holderId) {
+        $historyStmt = $db->prepare("INSERT INTO transfer_history (device_id, to_user_id, action_type, note) VALUES (?, ?, 'assign', 'Thiết bị mới được tự động giao cho kho')");
+        $historyStmt->execute([$deviceId, $holderId]);
+    }
     
     jsonResponse([
         'success' => true,

@@ -43,9 +43,7 @@ $canEdit = canEditDevices();
             <select id="status-filter" class="px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-lg text-sm font-medium text-slate-700 dark:text-slate-200">
                 <option value="">Trạng thái: Tất cả</option>
                 <option value="available">Sẵn sàng</option>
-                <option value="in_use">Đang mượn</option>
                 <option value="broken">Hỏng</option>
-                <option value="maintenance">Bảo trì</option>
             </select>
         </div>
     </div>

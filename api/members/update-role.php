@@ -36,7 +36,7 @@ if ($userId <= 0) {
     jsonResponse(['success' => false, 'message' => 'ID người dùng không hợp lệ'], 400);
 }
 
-if (!in_array($newRole, ['user', 'mod', 'admin'])) {
+if (!in_array($newRole, ['user', 'mod', 'admin', 'warehouse'])) {
     jsonResponse(['success' => false, 'message' => 'Role không hợp lệ'], 400);
 }
 
@@ -61,7 +61,7 @@ try {
     $stmt = $db->prepare("UPDATE users SET role = ? WHERE id = ?");
     $stmt->execute([$newRole, $userId]);
     
-    $roleLabels = ['user' => 'User', 'mod' => 'Moderator', 'admin' => 'Admin'];
+    $roleLabels = ['user' => 'User', 'mod' => 'Moderator', 'admin' => 'Admin', 'warehouse' => 'Warehouse'];
     
     jsonResponse([
         'success' => true,

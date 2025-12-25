@@ -147,6 +147,13 @@ $canManageRoles = isAdmin();
                 </div>
             </label>
             <label class="flex items-center gap-3 p-3 rounded-lg border border-slate-200 dark:border-slate-600 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800">
+                <input type="radio" name="role-select" value="warehouse" class="text-primary focus:ring-primary">
+                <div>
+                    <p class="font-medium text-slate-900 dark:text-white">Warehouse</p>
+                    <p class="text-xs text-slate-500">Quản lý kho, nhận thiết bị hỏng</p>
+                </div>
+            </label>
+            <label class="flex items-center gap-3 p-3 rounded-lg border border-slate-200 dark:border-slate-600 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800">
                 <input type="radio" name="role-select" value="admin" class="text-primary focus:ring-primary">
                 <div>
                     <p class="font-medium text-slate-900 dark:text-white">Admin</p>
@@ -191,6 +198,7 @@ function getRoleBadge(role) {
     const badges = {
         'admin': '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">Admin</span>',
         'mod': '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">Mod</span>',
+        'warehouse': '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400"><span class="material-symbols-outlined text-[12px]">warehouse</span>Kho</span>',
         'user': '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300">User</span>'
     };
     return badges[role] || badges['user'];
@@ -263,9 +271,15 @@ async function loadMembers() {
         tbody.innerHTML = result.data.map(member => `
             <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors group">
                 <td class="px-4 py-4 align-top">
+                    ${member.role === 'warehouse' ? `
+                    <div class="size-10 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center text-purple-600 dark:text-purple-400 font-bold ring-2 ring-white dark:ring-slate-700">
+                        <span class="material-symbols-outlined text-xl">warehouse</span>
+                    </div>
+                    ` : `
                     <div class="size-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold ring-2 ring-white dark:ring-slate-700">
                         ${member.name.charAt(0).toUpperCase()}
                     </div>
+                    `}
                 </td>
                 <td class="px-4 py-4 align-top">
                     <div class="flex flex-col">

@@ -77,8 +77,8 @@ try {
     $stmt = $db->prepare("UPDATE transfer_requests SET status = 'confirmed' WHERE id = ?");
     $stmt->execute([$requestId]);
     
-    // Update device holder
-    $stmt = $db->prepare("UPDATE devices SET current_holder_id = ?, status = 'in_use' WHERE id = ?");
+    // Update device holder (keep status unchanged)
+    $stmt = $db->prepare("UPDATE devices SET current_holder_id = ? WHERE id = ?");
     $stmt->execute([$newHolderId, $request['device_id']]);
     
     // Add to transfer history

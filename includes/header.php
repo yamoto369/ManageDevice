@@ -22,6 +22,7 @@ function getRoleBadge($role) {
     $badges = [
         'admin' => '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">Admin</span>',
         'mod' => '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">Mod</span>',
+        'warehouse' => '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400"><span class="material-symbols-outlined text-[12px]">warehouse</span>Kho</span>',
         'user' => ''
     ];
     return $badges[$role] ?? '';
@@ -122,9 +123,15 @@ function getRoleBadge($role) {
             <!-- User Menu -->
             <div class="relative" id="user-menu-container">
                 <button id="user-menu-btn" class="flex items-center gap-2 cursor-pointer">
+                    <?php if (($currentUser['role'] ?? '') === 'warehouse'): ?>
+                    <div class="rounded-full size-10 border border-slate-200 dark:border-slate-600 bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center text-purple-600 dark:text-purple-400">
+                        <span class="material-symbols-outlined">warehouse</span>
+                    </div>
+                    <?php else: ?>
                     <div class="bg-center bg-no-repeat bg-cover rounded-full size-10 border border-slate-200 dark:border-slate-600 bg-primary/10 flex items-center justify-center text-primary font-bold">
                         <?php echo strtoupper(substr($currentUser['name'] ?? 'U', 0, 1)); ?>
                     </div>
+                    <?php endif; ?>
                     <span class="hidden sm:flex items-center gap-2">
                         <span class="text-sm font-medium"><?php echo htmlspecialchars($currentUser['name'] ?? 'User'); ?></span>
                         <?php echo getRoleBadge($currentUser['role'] ?? 'user'); ?>
