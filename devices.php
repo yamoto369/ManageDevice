@@ -133,7 +133,7 @@ async function loadDevices() {
                 </td>
                 <td class="px-6 py-4">
                     ${device.holder_id ? `
-                        <a href="transfer.php?device_id=${device.id}" class="flex items-center gap-3 cursor-pointer hover:opacity-80">
+                        <div class="flex items-center gap-3">
                             <div class="size-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-sm">
                                 ${device.holder_name.charAt(0).toUpperCase()}
                             </div>
@@ -141,18 +141,21 @@ async function loadDevices() {
                                 ${device.holder_alias || device.holder_name}
                                 ${device.holder_alias ? `<span class="text-xs text-slate-400 ml-1">(${device.holder_name})</span>` : ''}
                             </span>
-                        </a>
+                        </div>
                     ` : `
-                        <a href="transfer.php?device_id=${device.id}" class="flex items-center gap-2 cursor-pointer hover:opacity-80">
+                        <div class="flex items-center gap-2">
                             <div class="size-8 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-slate-400">
                                 <span class="material-symbols-outlined text-[16px]">person_off</span>
                             </div>
                             <span class="text-sm text-slate-400 italic">Chưa giao</span>
-                        </a>
+                        </div>
                     `}
                 </td>
                 <td class="px-6 py-4 text-right">
                     <div class="flex items-center justify-end gap-1">
+                        <a href="transfer.php?device_id=${device.id}" class="p-2 rounded-full text-slate-400 hover:text-green-500 hover:bg-green-50 dark:hover:bg-green-900/30 transition-all inline-flex" title="Chuyển giao">
+                            <span class="material-symbols-outlined text-[20px]">swap_horiz</span>
+                        </a>
                         ${canEdit ? `
                         <a href="device-form.php?id=${device.id}" class="p-2 rounded-full text-slate-400 hover:text-primary hover:bg-slate-100 dark:hover:bg-slate-700 transition-all inline-flex" title="Chỉnh sửa">
                             <span class="material-symbols-outlined text-[20px]">edit</span>
