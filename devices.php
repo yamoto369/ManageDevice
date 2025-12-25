@@ -227,6 +227,9 @@ function debounce(func, wait) {
     };
 }
 
+// Register callback to reload when transfer status changes
+onTransferStatusChange.push(loadDevices);
+
 // Load on page ready
 loadDevices();
 </script>

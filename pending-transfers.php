@@ -319,6 +319,9 @@ async function rejectRequest(requestId) {
     }
 }
 
+// Register callback to reload when transfer status changes
+onTransferStatusChange.push(loadRequests);
+
 // Initial load
 loadRequests();
 </script>

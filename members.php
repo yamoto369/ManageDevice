@@ -494,6 +494,9 @@ document.getElementById('reset-password-modal').addEventListener('click', (e) =>
     if (e.target === e.currentTarget) closeResetPasswordModal();
 });
 
+// Register callback to reload when transfer status changes
+onTransferStatusChange.push(loadMembers);
+
 loadMembers();
 </script>
 

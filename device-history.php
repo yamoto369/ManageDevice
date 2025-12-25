@@ -200,6 +200,9 @@ async function loadDeviceHistory() {
     }
 }
 
+// Register callback to reload when transfer status changes
+onTransferStatusChange.push(loadDeviceHistory);
+
 loadDeviceHistory();
 </script>
 

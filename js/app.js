@@ -120,6 +120,10 @@ function getDeviceIcon(name) {
     return 'devices';
 }
 
+// Callbacks for when transfer status changes (confirm/reject)
+// Pages can register their reload functions here
+const onTransferStatusChange = [];
+
 // Notification polling
 let notificationInterval = null;
 
@@ -200,9 +204,13 @@ async function confirmFromPopup(requestId, event) {
             item.style.transform = 'translateX(20px)';
             setTimeout(() => {
                 checkNotifications();
+                // Trigger page content reload
+                onTransferStatusChange.forEach(callback => callback());
             }, 300);
         } else {
             checkNotifications();
+            // Trigger page content reload
+            onTransferStatusChange.forEach(callback => callback());
         }
     } else {
         Toast.error(result.message);
@@ -225,9 +233,13 @@ async function rejectFromPopup(requestId, event) {
             item.style.transform = 'translateX(20px)';
             setTimeout(() => {
                 checkNotifications();
+                // Trigger page content reload
+                onTransferStatusChange.forEach(callback => callback());
             }, 300);
         } else {
             checkNotifications();
+            // Trigger page content reload
+            onTransferStatusChange.forEach(callback => callback());
         }
     } else {
         Toast.error(result.message);
