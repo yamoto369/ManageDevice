@@ -1,18 +1,33 @@
 <?php
 /**
- * Add Device Page
- * Admin only
+ * Device Form Page (Add / Edit)
+ * Add: Admin only
+ * Edit: Mod and Admin
  */
 require_once 'config/database.php';
 requireAuth();
 
-// Only admin can add devices
-if (!canManageDevices()) {
-    header('Location: devices.php');
-    exit;
+// Check for edit mode
+$deviceId = isset($_GET['id']) ? intval($_GET['id']) : 0;
+$isEditMode = $deviceId > 0;
+
+// Permission check
+if ($isEditMode) {
+    // Edit mode: mod or admin can edit
+    if (!canEditDevices()) {
+        header('Location: devices.php');
+        exit;
+    }
+} else {
+    // Add mode: admin only
+    if (!canManageDevices()) {
+        header('Location: devices.php');
+        exit;
+    }
 }
 
-define('PAGE_TITLE', 'Thêm thiết bị mới');
+$pageTitle = $isEditMode ? 'Chỉnh sửa thiết bị' : 'Thêm thiết bị mới';
+define('PAGE_TITLE', $pageTitle);
 require_once 'includes/header.php';
 ?>
 
@@ -25,22 +40,23 @@ require_once 'includes/header.php';
                 Thiết bị
             </a>
             <span class="text-slate-400 dark:text-slate-600 text-base font-medium leading-normal">/</span>
-            <span class="text-slate-900 dark:text-slate-100 text-base font-medium leading-normal">Thêm Thiết bị Mới</span>
+            <span class="text-slate-900 dark:text-slate-100 text-base font-medium leading-normal"><?php echo $isEditMode ? 'Chỉnh sửa' : 'Thêm Thiết bị Mới'; ?></span>
         </div>
         
         <!-- Page Heading -->
         <div class="flex flex-wrap justify-between gap-3 pb-8">
             <div class="flex min-w-72 flex-col gap-3">
-                <h1 class="text-slate-900 dark:text-white text-3xl md:text-4xl font-black leading-tight tracking-[-0.033em]">Thêm Thiết bị Mới</h1>
+                <h1 class="text-slate-900 dark:text-white text-3xl md:text-4xl font-black leading-tight tracking-[-0.033em]"><?php echo $isEditMode ? 'Chỉnh sửa Thiết bị' : 'Thêm Thiết bị Mới'; ?></h1>
                 <p class="text-slate-500 dark:text-slate-400 text-base font-normal leading-normal max-w-2xl">
-                    Điền thông tin vào biểu mẫu dưới đây để đăng ký thiết bị mới vào hệ thống quản lý kho nội bộ.
+                    <?php echo $isEditMode ? 'Cập nhật thông tin thiết bị trong hệ thống.' : 'Điền thông tin vào biểu mẫu dưới đây để đăng ký thiết bị mới vào hệ thống quản lý kho nội bộ.'; ?>
                 </p>
             </div>
         </div>
         
         <!-- Form Container -->
         <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6 md:p-8">
-            <form id="addDeviceForm" class="flex flex-col gap-6">
+            <form id="deviceForm" class="flex flex-col gap-6">
+                <input type="hidden" name="id" value="<?php echo $deviceId; ?>">
                 <div id="form-error" class="hidden p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm"></div>
                 
                 <!-- Basic Info -->
@@ -67,16 +83,20 @@ require_once 'includes/header.php';
                             <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 group-focus-within:text-primary transition-colors">
                                 <span class="material-symbols-outlined">qr_code_2</span>
                             </span>
-                            <input name="imei_sn" required class="form-input w-full rounded-lg text-slate-900 dark:text-white bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-600 focus:border-primary focus:ring-primary h-12 pl-10 pr-4 text-base placeholder:text-slate-400 transition-all font-mono" placeholder="Nhập số IMEI hoặc SN" type="text"/>
+                            <input name="imei_sn" <?php echo $isEditMode ? 'readonly' : 'required'; ?> class="form-input w-full rounded-lg text-slate-900 dark:text-white bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-600 focus:border-primary focus:ring-primary h-12 pl-10 pr-4 text-base placeholder:text-slate-400 transition-all font-mono <?php echo $isEditMode ? 'opacity-60 cursor-not-allowed' : ''; ?>" placeholder="Nhập số IMEI hoặc SN" type="text"/>
                         </div>
+                        <?php if ($isEditMode): ?>
+                        <span class="text-xs text-slate-400">IMEI/SN không thể thay đổi</span>
+                        <?php endif; ?>
                     </label>
                     
                     <!-- Status -->
                     <label class="flex flex-col flex-1 gap-2">
-                        <span class="text-slate-900 dark:text-white text-base font-semibold leading-normal">Trạng thái ban đầu</span>
+                        <span class="text-slate-900 dark:text-white text-base font-semibold leading-normal">Trạng thái</span>
                         <div class="relative">
                             <select name="status" class="form-select w-full cursor-pointer rounded-lg text-slate-900 dark:text-white bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-600 focus:border-primary focus:ring-primary h-12 px-4 text-base transition-all appearance-none">
                                 <option value="available">Sẵn sàng sử dụng</option>
+                                <option value="in_use">Đang mượn</option>
                                 <option value="maintenance">Đang bảo trì</option>
                                 <option value="broken">Hỏng / Cần sửa chữa</option>
                             </select>
@@ -100,7 +120,7 @@ require_once 'includes/header.php';
                     </a>
                     <button type="submit" class="w-full sm:w-auto flex items-center justify-center gap-2 px-8 py-2.5 rounded-lg bg-primary hover:bg-blue-600 text-white font-bold shadow-lg shadow-blue-500/30 transition-all transform active:scale-95">
                         <span class="material-symbols-outlined text-xl">save</span>
-                        Lưu thiết bị
+                        <?php echo $isEditMode ? 'Cập nhật' : 'Lưu thiết bị'; ?>
                     </button>
                 </div>
             </form>
@@ -109,27 +129,59 @@ require_once 'includes/header.php';
 </main>
 
 <script>
-document.getElementById('addDeviceForm').addEventListener('submit', async (e) => {
+const isEditMode = <?php echo $isEditMode ? 'true' : 'false'; ?>;
+const deviceId = <?php echo $deviceId; ?>;
+
+// Load device data if editing
+async function loadDeviceData() {
+    if (!isEditMode) return;
+    
+    const result = await API.get(`api/devices/get.php?id=${deviceId}`);
+    if (result.success && result.device) {
+        const device = result.device;
+        document.querySelector('[name="name"]').value = device.name || '';
+        document.querySelector('[name="manufacturer"]').value = device.manufacturer || '';
+        document.querySelector('[name="imei_sn"]').value = device.imei_sn || '';
+        document.querySelector('[name="status"]').value = device.status || 'available';
+        document.querySelector('[name="description"]').value = device.description || '';
+    } else {
+        Toast.error('Không thể tải thông tin thiết bị');
+        setTimeout(() => window.location.href = 'devices.php', 1500);
+    }
+}
+
+document.getElementById('deviceForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const formData = new FormData(e.target);
     const errorEl = document.getElementById('form-error');
     
-    const result = await API.post('api/devices/add.php', {
+    const payload = {
         name: formData.get('name'),
-        imei_sn: formData.get('imei_sn'),
         manufacturer: formData.get('manufacturer'),
         status: formData.get('status'),
         description: formData.get('description')
-    });
+    };
+    
+    let result;
+    if (isEditMode) {
+        payload.id = deviceId;
+        result = await API.post('api/devices/update.php', payload);
+    } else {
+        payload.imei_sn = formData.get('imei_sn');
+        result = await API.post('api/devices/add.php', payload);
+    }
     
     if (result.success) {
-        Toast.success('Thêm thiết bị thành công!');
+        Toast.success(isEditMode ? 'Cập nhật thiết bị thành công!' : 'Thêm thiết bị thành công!');
         setTimeout(() => window.location.href = 'devices.php', 1000);
     } else {
         errorEl.textContent = result.message;
         errorEl.classList.remove('hidden');
     }
 });
+
+// Load data on page ready
+loadDeviceData();
 </script>
 
 <?php require_once 'includes/footer.php'; ?>

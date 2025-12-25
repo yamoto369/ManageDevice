@@ -22,7 +22,7 @@ $canEdit = canEditDevices();
             <p class="text-slate-500 dark:text-slate-400 text-sm mt-1">Quản lý toàn bộ thiết bị công nghệ của đội ngũ</p>
         </div>
         <?php if ($canManage): ?>
-        <a href="add-device.php" class="flex shrink-0 cursor-pointer items-center justify-center gap-2 overflow-hidden rounded-lg h-10 px-5 bg-primary hover:bg-blue-600 text-white text-sm font-bold leading-normal tracking-[0.015em] transition-colors shadow-sm">
+        <a href="device-form.php" class="flex shrink-0 cursor-pointer items-center justify-center gap-2 overflow-hidden rounded-lg h-10 px-5 bg-primary hover:bg-blue-600 text-white text-sm font-bold leading-normal tracking-[0.015em] transition-colors shadow-sm">
             <span class="material-symbols-outlined text-[20px]">add</span>
             <span class="truncate">Thêm thiết bị</span>
         </a>
@@ -93,6 +93,7 @@ $canEdit = canEditDevices();
 
 <script>
 const currentUserId = <?php echo $currentUserId; ?>;
+const canEdit = <?php echo $canEdit ? 'true' : 'false'; ?>;
 let currentPage = 1;
 let totalPages = 1;
 
@@ -151,9 +152,16 @@ async function loadDevices() {
                     `}
                 </td>
                 <td class="px-6 py-4 text-right">
-                    <a href="device-history.php?id=${device.id}" class="p-2 rounded-full text-slate-400 hover:text-primary hover:bg-slate-100 dark:hover:bg-slate-700 transition-all inline-flex">
-                        <span class="material-symbols-outlined text-[20px]">history</span>
-                    </a>
+                    <div class="flex items-center justify-end gap-1">
+                        ${canEdit ? `
+                        <a href="device-form.php?id=${device.id}" class="p-2 rounded-full text-slate-400 hover:text-primary hover:bg-slate-100 dark:hover:bg-slate-700 transition-all inline-flex" title="Chỉnh sửa">
+                            <span class="material-symbols-outlined text-[20px]">edit</span>
+                        </a>
+                        ` : ''}
+                        <a href="device-history.php?id=${device.id}" class="p-2 rounded-full text-slate-400 hover:text-primary hover:bg-slate-100 dark:hover:bg-slate-700 transition-all inline-flex" title="Lịch sử">
+                            <span class="material-symbols-outlined text-[20px]">history</span>
+                        </a>
+                    </div>
                 </td>
             </tr>
         `).join('');

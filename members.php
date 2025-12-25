@@ -101,6 +101,25 @@ $canManageRoles = isAdmin();
     </div>
 </main>
 
+<!-- Reset Password Confirm Modal -->
+<div id="reset-password-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+    <div class="bg-white dark:bg-[#1a2632] rounded-xl shadow-2xl max-w-md w-full mx-4 p-6">
+        <div class="flex items-center gap-3 mb-4">
+            <div class="p-2 rounded-lg bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400">
+                <span class="material-symbols-outlined">key</span>
+            </div>
+            <h3 class="text-lg font-bold text-slate-900 dark:text-white">Reset Password</h3>
+        </div>
+        <p id="reset-password-modal-text" class="text-slate-600 dark:text-slate-400 mb-2">Bạn có chắc chắn muốn reset password của thành viên này?</p>
+        <p class="text-sm text-slate-500 dark:text-slate-500 mb-6">Password sẽ được đặt lại về mặc định: <code class="bg-slate-100 dark:bg-slate-700 px-2 py-0.5 rounded font-mono">123456</code></p>
+        <input type="hidden" id="reset-password-modal-user-id">
+        <div class="flex gap-3 justify-end">
+            <button onclick="closeResetPasswordModal()" class="px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 font-medium hover:bg-slate-100 dark:hover:bg-slate-700">Hủy</button>
+            <button onclick="confirmResetPassword()" class="px-4 py-2 rounded-lg bg-amber-500 text-white font-medium hover:bg-amber-600">Reset Password</button>
+        </div>
+    </div>
+</div>
+
 <!-- Role Change Modal -->
 <div id="role-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/50">
     <div class="bg-white dark:bg-[#1a2632] rounded-xl shadow-2xl max-w-md w-full mx-4 p-6">
@@ -157,7 +176,7 @@ $canManageRoles = isAdmin();
             <button onclick="closeDeleteModal()" class="px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 font-medium hover:bg-slate-100 dark:hover:bg-slate-700">Hủy</button>
             <button onclick="confirmDelete()" class="px-4 py-2 rounded-lg bg-red-600 text-white font-medium hover:bg-red-700">Xóa thành viên</button>
         </div>
-    </div>
+</div>
 </div>
 
 <script>
@@ -201,6 +220,13 @@ function getActionButtons(member) {
     
     // Role change button (admin only)
     if (canManageRoles) {
+        // Reset password button (admin only)
+        buttons.push(`
+            <button onclick="openResetPasswordModal(${member.id}, '${member.name}')" title="Reset Password"
+                class="p-1.5 rounded-lg bg-amber-100 text-amber-600 hover:bg-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:hover:bg-amber-900/50">
+                <span class="material-symbols-outlined text-[18px]">key</span>
+            </button>
+        `);
         buttons.push(`
             <button onclick="openRoleModal(${member.id}, '${member.name}', '${member.role}')" title="Thay đổi role"
                 class="p-1.5 rounded-lg bg-primary/10 text-primary hover:bg-primary/20">
@@ -359,6 +385,29 @@ async function confirmDelete() {
     }
 }
 
+// Reset Password Modal
+function openResetPasswordModal(userId, userName) {
+    document.getElementById('reset-password-modal-user-id').value = userId;
+    document.getElementById('reset-password-modal-text').textContent = `Bạn có chắc chắn muốn reset password của "${userName}"?`;
+    document.getElementById('reset-password-modal').classList.remove('hidden');
+}
+
+function closeResetPasswordModal() {
+    document.getElementById('reset-password-modal').classList.add('hidden');
+}
+
+async function confirmResetPassword() {
+    const userId = document.getElementById('reset-password-modal-user-id').value;
+    
+    const result = await API.post('api/members/reset-password.php', { user_id: userId });
+    if (result.success) {
+        Toast.success(result.message);
+        closeResetPasswordModal();
+    } else {
+        Toast.error(result.message);
+    }
+}
+
 // Alias functions
 function openAliasPanel(userId, userName, currentAlias) {
     editingUserId = userId;
@@ -426,6 +475,9 @@ document.getElementById('role-modal').addEventListener('click', (e) => {
 });
 document.getElementById('delete-modal').addEventListener('click', (e) => {
     if (e.target === e.currentTarget) closeDeleteModal();
+});
+document.getElementById('reset-password-modal').addEventListener('click', (e) => {
+    if (e.target === e.currentTarget) closeResetPasswordModal();
 });
 
 loadMembers();
