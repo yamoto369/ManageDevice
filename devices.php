@@ -132,9 +132,15 @@ async function loadDevices() {
                 <td class="px-6 py-4">
                     ${device.holder_id ? `
                         <div class="flex items-center gap-3">
-                            <div class="size-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-sm">
-                                ${device.holder_name.charAt(0).toUpperCase()}
-                            </div>
+                            ${device.holder_role === 'warehouse' ? `
+                                <div class="size-8 rounded-full border border-slate-200 dark:border-slate-600 bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center text-purple-600 dark:text-purple-400">
+                                    <span class="material-symbols-outlined text-[16px]">warehouse</span>
+                                </div>
+                            ` : `
+                                <div class="size-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-sm">
+                                    ${device.holder_name.charAt(0).toUpperCase()}
+                                </div>
+                            `}
                             <span class="text-sm font-medium text-[#0d141b] dark:text-slate-200">
                                 ${device.holder_alias || device.holder_name}
                                 ${device.holder_alias ? `<span class="text-xs text-slate-400 ml-1">(${device.holder_name})</span>` : ''}
@@ -151,16 +157,16 @@ async function loadDevices() {
                 </td>
                 <td class="px-6 py-4 text-right">
                     <div class="flex items-center justify-end gap-1">
-                        <a href="transfer.php?device_id=${device.id}" class="p-2 rounded-full text-slate-400 hover:text-green-500 hover:bg-green-50 dark:hover:bg-green-900/30 transition-all inline-flex" title="Chuyển giao">
-                            <span class="material-symbols-outlined text-[20px]">swap_horiz</span>
+                        <a href="transfer.php?device_id=${device.id}" class="p-1.5 rounded-lg ${device.holder_id == currentUserId ? 'bg-orange-100 text-orange-600 hover:bg-orange-200 dark:bg-orange-900/30 dark:text-orange-400 dark:hover:bg-orange-900/50' : 'bg-green-100 text-green-600 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-400 dark:hover:bg-green-900/50'} transition-all inline-flex" title="${device.holder_id == currentUserId ? 'Chuyển đi' : 'Nhận về'}">
+                            <span class="material-symbols-outlined text-[18px]">${device.holder_id == currentUserId ? 'keyboard_double_arrow_right' : 'keyboard_double_arrow_left'}</span>
                         </a>
                         ${canEdit ? `
-                        <a href="device-form.php?id=${device.id}" class="p-2 rounded-full text-slate-400 hover:text-primary hover:bg-slate-100 dark:hover:bg-slate-700 transition-all inline-flex" title="Chỉnh sửa">
-                            <span class="material-symbols-outlined text-[20px]">edit</span>
+                        <a href="device-form.php?id=${device.id}" class="p-1.5 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-all inline-flex" title="Chỉnh sửa">
+                            <span class="material-symbols-outlined text-[18px]">edit</span>
                         </a>
                         ` : ''}
-                        <a href="device-history.php?id=${device.id}" class="p-2 rounded-full text-slate-400 hover:text-primary hover:bg-slate-100 dark:hover:bg-slate-700 transition-all inline-flex" title="Lịch sử">
-                            <span class="material-symbols-outlined text-[20px]">history</span>
+                        <a href="device-history.php?id=${device.id}" class="p-1.5 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600 transition-all inline-flex" title="Lịch sử">
+                            <span class="material-symbols-outlined text-[18px]">history</span>
                         </a>
                     </div>
                 </td>

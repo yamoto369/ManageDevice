@@ -57,7 +57,7 @@ try {
     $total = $stmt->fetch()['total'];
     
     // Get devices with holder info
-    $sql = "SELECT d.*, u.id as holder_id, u.name as holder_name, u.email as holder_email, u.avatar as holder_avatar
+    $sql = "SELECT d.*, u.id as holder_id, u.name as holder_name, u.email as holder_email, u.avatar as holder_avatar, u.role as holder_role
             FROM devices d
             LEFT JOIN users u ON d.current_holder_id = u.id
             {$whereClause}

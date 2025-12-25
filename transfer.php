@@ -141,17 +141,16 @@ async function loadDevice() {
             </div>
         `;
         
-        // Update info message based on holder
-        const infoEl = document.getElementById('form-info');
-        const infoText = document.getElementById('info-text');
-        
+        // Update info message based on holder (only for transfer out case - when you own the device)
+        // Other cases are handled in loadUsers() after checking user list
         if (device.holder_id == currentUserId) {
+            const infoEl = document.getElementById('form-info');
+            const infoText = document.getElementById('info-text');
             infoText.innerHTML = '<strong>Bạn đang giữ thiết bị này.</strong> Khi chọn người nhận, yêu cầu chuyển giao sẽ được gửi để họ xác nhận.';
             infoEl.classList.remove('hidden');
-        } else if (device.holder_id) {
-            infoText.innerHTML = `<strong>Thiết bị đang được ${device.holder_alias || device.holder_name} giữ.</strong> Yêu cầu mượn sẽ được gửi đến người đang giữ để phê duyệt.`;
-            infoEl.classList.remove('hidden');
-        } else {
+        } else if (!device.holder_id) {
+            const infoEl = document.getElementById('form-info');
+            const infoText = document.getElementById('info-text');
             infoText.innerHTML = '<strong>Thiết bị chưa được giao cho ai.</strong> Bạn có thể chỉ định người nhận thiết bị này.';
             infoEl.classList.remove('hidden');
         }
@@ -165,15 +164,25 @@ async function loadUsers() {
     
     if (result.success) {
         const select = document.getElementById('to-user');
+        const infoEl = document.getElementById('form-info');
+        const infoText = document.getElementById('info-text');
+        
+        // Case: Device belongs to someone else - can only transfer to yourself
+        if (device && device.holder_id && device.holder_id != currentUserId) {
+            const currentUser = result.data.find(u => u.id == currentUserId);
+            if (currentUser) {
+                select.innerHTML = `<option value="${currentUser.id}" selected>${currentUser.alias || currentUser.name} (${currentUser.email})</option>`;
+            }
+            infoText.innerHTML = `<strong>Thiết bị đang được ${device.holder_alias || device.holder_name} giữ.</strong> Yêu cầu chuyển giao sẽ được gửi để nhận thiết bị về cho bạn.`;
+            infoEl.classList.remove('hidden');
+            return;
+        }
+        
         let users = result.data.filter(u => u.id != currentUserId);
         
         // If device is broken, only show warehouse users
         if (device && device.status === 'broken') {
             users = users.filter(u => u.role === 'warehouse');
-            
-            // Show info message about restriction
-            const infoEl = document.getElementById('form-info');
-            const infoText = document.getElementById('info-text');
             infoText.innerHTML = '<strong>Thiết bị đang ở trạng thái hỏng.</strong> Chỉ có thể chuyển cho người quản lý kho (warehouse role).';
             infoEl.classList.remove('hidden');
         }

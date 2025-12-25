@@ -42,10 +42,6 @@ if ($toUserId <= 0) {
     jsonResponse(['success' => false, 'message' => 'Người nhận là bắt buộc'], 400);
 }
 
-if ($toUserId == $currentUserId) {
-    jsonResponse(['success' => false, 'message' => 'Không thể chuyển thiết bị cho chính mình'], 400);
-}
-
 try {
     $db = getDB();
     
@@ -56,6 +52,14 @@ try {
     
     if (!$device) {
         jsonResponse(['success' => false, 'message' => 'Không tìm thấy thiết bị'], 404);
+    }
+    
+    // Determine request type first to validate correctly
+    $currentHolderId = $device['current_holder_id'];
+    
+    // Only block self-transfer when current user is the holder
+    if ($currentHolderId == $currentUserId && $toUserId == $currentUserId) {
+        jsonResponse(['success' => false, 'message' => 'Không thể chuyển thiết bị cho chính mình'], 400);
     }
     
     // Check if to_user exists
@@ -71,9 +75,6 @@ try {
     if ($device['status'] === 'broken' && $toUser['role'] !== 'warehouse') {
         jsonResponse(['success' => false, 'message' => 'Thiết bị hỏng chỉ có thể chuyển cho người quản lý kho (warehouse)'], 400);
     }
-    
-    // Determine request type
-    $currentHolderId = $device['current_holder_id'];
     
     if ($currentHolderId == $currentUserId) {
         // Current user is holder -> Direct transfer
