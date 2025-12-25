@@ -69,21 +69,27 @@ async function loadPendingRequests() {
                     <!-- Transfer Info -->
                     <div class="flex-1 flex flex-col sm:flex-row items-start sm:items-center gap-4 min-w-[250px]">
                         <div class="flex items-center gap-3">
-                            <div class="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs">
+                            <div class="h-8 w-8 rounded-full ${req.is_initiator ? 'bg-blue-100 ring-2 ring-blue-400' : 'bg-primary/10'} flex items-center justify-center text-primary font-bold text-xs">
                                 ${req.from_user_name.charAt(0).toUpperCase()}
                             </div>
                             <div class="flex flex-col">
-                                <span class="text-sm font-medium text-slate-900 dark:text-white">${req.from_user_alias || req.from_user_name}</span>
+                                <span class="text-sm font-medium text-slate-900 dark:text-white">
+                                    ${req.from_user_alias || req.from_user_name}
+                                    ${req.is_initiator ? '<span class="text-xs text-blue-500 ml-1">(Bạn)</span>' : ''}
+                                </span>
                                 <span class="text-xs text-slate-500 dark:text-slate-400">${req.type === 'transfer' ? 'Chuyển giao' : 'Yêu cầu mượn'}</span>
                             </div>
                         </div>
                         <span class="material-symbols-outlined text-slate-400 rotate-90 sm:rotate-0 mx-2">arrow_right_alt</span>
                         <div class="flex items-center gap-3">
-                            <div class="h-8 w-8 rounded-full bg-green-100 flex items-center justify-center text-green-700 font-bold text-xs">
+                            <div class="h-8 w-8 rounded-full ${req.can_respond ? 'bg-green-100 ring-2 ring-green-400' : 'bg-green-100'} flex items-center justify-center text-green-700 font-bold text-xs">
                                 ${req.to_user_name.charAt(0).toUpperCase()}
                             </div>
                             <div class="flex flex-col">
-                                <span class="text-sm font-medium text-slate-900 dark:text-white">${req.to_user_alias || req.to_user_name}</span>
+                                <span class="text-sm font-medium text-slate-900 dark:text-white">
+                                    ${req.to_user_alias || req.to_user_name}
+                                    ${req.can_respond ? '<span class="text-xs text-green-500 ml-1">(Bạn)</span>' : ''}
+                                </span>
                                 <span class="text-xs text-slate-500 dark:text-slate-400">Người nhận</span>
                             </div>
                         </div>
@@ -96,14 +102,25 @@ async function loadPendingRequests() {
                             <span class="text-xs text-slate-500 dark:text-slate-400">${timeAgo(req.created_at)}</span>
                         </div>
                         <div class="flex items-center gap-2">
-                            <button onclick="rejectRequest(${req.id})" class="h-10 px-4 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-medium text-sm hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors flex items-center gap-2">
-                                <span class="material-symbols-outlined text-[18px]">close</span>
-                                Từ chối
-                            </button>
-                            <button onclick="confirmRequest(${req.id})" class="h-10 px-4 rounded-lg bg-primary text-white font-medium text-sm hover:bg-primary/90 transition-colors shadow-sm shadow-blue-500/30 flex items-center gap-2">
-                                <span class="material-symbols-outlined text-[18px]">check</span>
-                                Xác nhận
-                            </button>
+                            ${req.can_cancel ? `
+                                <button onclick="cancelRequest(${req.id})" class="h-10 px-4 rounded-lg border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 font-medium text-sm hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-[18px]">cancel</span>
+                                    Hủy yêu cầu
+                                </button>
+                            ` : ''}
+                            ${req.can_respond ? `
+                                <button onclick="rejectRequest(${req.id})" class="h-10 px-4 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-medium text-sm hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-[18px]">close</span>
+                                    Từ chối
+                                </button>
+                                <button onclick="confirmRequest(${req.id})" class="h-10 px-4 rounded-lg bg-primary text-white font-medium text-sm hover:bg-primary/90 transition-colors shadow-sm shadow-blue-500/30 flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-[18px]">check</span>
+                                    Xác nhận
+                                </button>
+                            ` : ''}
+                            ${!req.can_cancel && !req.can_respond ? `
+                                <span class="text-xs text-slate-400 italic">Không phải của bạn</span>
+                            ` : ''}
                         </div>
                     </div>
                 </div>
@@ -117,6 +134,20 @@ async function loadPendingRequests() {
                 </div>
             `;
         }
+    }
+}
+
+async function cancelRequest(requestId) {
+    if (!confirm('Hủy yêu cầu chuyển giao này?')) return;
+    
+    const result = await API.post('api/transfers/cancel.php', { request_id: requestId });
+    
+    if (result.success) {
+        Toast.success(result.message);
+        loadPendingRequests();
+        checkNotifications();
+    } else {
+        Toast.error(result.message);
     }
 }
 

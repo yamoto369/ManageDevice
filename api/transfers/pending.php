@@ -22,9 +22,7 @@ $currentUserId = getCurrentUserId();
 try {
     $db = getDB();
     
-    // Get pending requests where:
-    // 1. User is the recipient (to_user_id) and request is a transfer
-    // 2. User is the current device holder and request is a borrow_request
+    // Get ALL pending requests
     $stmt = $db->prepare("
         SELECT tr.*, 
                d.name as device_name, d.imei_sn as device_imei, d.manufacturer as device_manufacturer,
@@ -36,19 +34,29 @@ try {
         JOIN users fu ON tr.from_user_id = fu.id
         JOIN users tu ON tr.to_user_id = tu.id
         WHERE tr.status = 'pending'
-        AND (
-            (tr.type = 'transfer' AND tr.to_user_id = ?)
-            OR (tr.type = 'borrow_request' AND d.current_holder_id = ?)
-        )
         ORDER BY tr.created_at DESC
     ");
-    $stmt->execute([$currentUserId, $currentUserId]);
+    $stmt->execute();
     $requests = $stmt->fetchAll();
     
-    // Add aliases
+    // Add aliases and role indicators
     foreach ($requests as &$request) {
         $request['from_user_alias'] = getUserAlias($currentUserId, $request['from_user_id']);
         $request['to_user_alias'] = getUserAlias($currentUserId, $request['to_user_id']);
+        
+        // Role indicators
+        $request['is_initiator'] = ($request['from_user_id'] == $currentUserId);
+        $request['can_cancel'] = ($request['from_user_id'] == $currentUserId);
+        
+        // Can respond (accept/reject) if:
+        // - Transfer: recipient can respond
+        // - Borrow request: current device holder can respond
+        $request['can_respond'] = false;
+        if ($request['type'] == 'transfer' && $request['to_user_id'] == $currentUserId) {
+            $request['can_respond'] = true;
+        } else if ($request['type'] == 'borrow_request' && $request['current_holder_id'] == $currentUserId) {
+            $request['can_respond'] = true;
+        }
     }
     
     jsonResponse([
