@@ -62,13 +62,17 @@ try {
         jsonResponse(['success' => false, 'message' => 'Không thể chuyển thiết bị cho chính mình'], 400);
     }
     
-    // Check if to_user exists
-    $stmt = $db->prepare("SELECT id, name, role FROM users WHERE id = ?");
+    // Check if to_user exists and is approved
+    $stmt = $db->prepare("SELECT id, name, role, status FROM users WHERE id = ?");
     $stmt->execute([$toUserId]);
     $toUser = $stmt->fetch();
     
     if (!$toUser) {
         jsonResponse(['success' => false, 'message' => 'Không tìm thấy người nhận'], 404);
+    }
+    
+    if ($toUser['status'] !== 'approved') {
+        jsonResponse(['success' => false, 'message' => 'Người nhận chưa được phê duyệt hoặc đã bị vô hiệu hóa'], 400);
     }
     
     // If device is broken, can only transfer to warehouse users
@@ -83,6 +87,15 @@ try {
         // Request goes to the intended recipient for confirmation
     } else if ($currentHolderId) {
         // Someone else is holding -> Borrow request (request goes to current holder)
+        // Check if current holder is approved (not pending/deactivated)
+        $stmt = $db->prepare("SELECT id, status FROM users WHERE id = ?");
+        $stmt->execute([$currentHolderId]);
+        $currentHolder = $stmt->fetch();
+        
+        if (!$currentHolder || $currentHolder['status'] !== 'approved') {
+            jsonResponse(['success' => false, 'message' => 'Người đang giữ thiết bị đã bị vô hiệu hóa, không thể tạo yêu cầu'], 400);
+        }
+        
         $type = 'borrow_request';
         $fromUserId = $currentUserId;
         // Actually, the request should go to current holder, so swap

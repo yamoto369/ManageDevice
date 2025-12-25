@@ -168,20 +168,21 @@ $canManageRoles = isAdmin();
     </div>
 </div>
 
-<!-- Delete Confirm Modal -->
+<!-- Deactivate Confirm Modal -->
 <div id="delete-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/50">
     <div class="bg-white dark:bg-[#1a2632] rounded-xl shadow-2xl max-w-md w-full mx-4 p-6">
         <div class="flex items-center gap-3 mb-4">
-            <div class="p-2 rounded-lg bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400">
-                <span class="material-symbols-outlined">warning</span>
+            <div class="p-2 rounded-lg bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400">
+                <span class="material-symbols-outlined">block</span>
             </div>
-            <h3 class="text-lg font-bold text-slate-900 dark:text-white">Xác nhận xóa</h3>
+            <h3 class="text-lg font-bold text-slate-900 dark:text-white">Vô hiệu hóa tài khoản</h3>
         </div>
-        <p id="delete-modal-text" class="text-slate-600 dark:text-slate-400 mb-6">Bạn có chắc chắn muốn xóa thành viên này? Hành động này không thể hoàn tác.</p>
+        <p id="delete-modal-text" class="text-slate-600 dark:text-slate-400 mb-2">Bạn có chắc chắn muốn vô hiệu hóa thành viên này?</p>
+        <p class="text-sm text-slate-500 dark:text-slate-500 mb-6">Lịch sử và thiết bị của tài khoản sẽ được giữ nguyên. Tài khoản sẽ chuyển về trạng thái chờ duyệt và không thể nhận transfer.</p>
         <input type="hidden" id="delete-modal-user-id">
         <div class="flex gap-3 justify-end">
             <button onclick="closeDeleteModal()" class="px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 font-medium hover:bg-slate-100 dark:hover:bg-slate-700">Hủy</button>
-            <button onclick="confirmDelete()" class="px-4 py-2 rounded-lg bg-red-600 text-white font-medium hover:bg-red-700">Xóa thành viên</button>
+            <button onclick="confirmDelete()" class="px-4 py-2 rounded-lg bg-amber-500 text-white font-medium hover:bg-amber-600">Vô hiệu hóa</button>
         </div>
 </div>
 </div>
@@ -216,16 +217,6 @@ function getActionButtons(member) {
     
     let buttons = [];
     
-    // Approve button (for pending members, visible to mod/admin)
-    if (canApprove && member.status === 'pending') {
-        buttons.push(`
-            <button onclick="approveMember(${member.id}, '${member.name}')" title="Phê duyệt" 
-                class="p-1.5 rounded-lg bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-400 dark:hover:bg-green-900/50">
-                <span class="material-symbols-outlined text-[18px]">check</span>
-            </button>
-        `);
-    }
-    
     // Role change button (admin only)
     if (canManageRoles) {
         // Reset password button (admin only)
@@ -242,11 +233,30 @@ function getActionButtons(member) {
             </button>
         `);
         
-        // Delete button (admin only)
+        // Approve/Deactivate button at same position (admin only)
+        if (member.status === 'pending') {
+            // Approve button for pending members
+            buttons.push(`
+                <button onclick="approveMember(${member.id}, '${member.name}')" title="Phê duyệt"
+                    class="p-1.5 rounded-lg bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-400 dark:hover:bg-green-900/50">
+                    <span class="material-symbols-outlined text-[18px]">check_circle</span>
+                </button>
+            `);
+        } else if (member.status === 'approved') {
+            // Deactivate button for approved members
+            buttons.push(`
+                <button onclick="openDeleteModal(${member.id}, '${member.name}')" title="Vô hiệu hóa"
+                    class="p-1.5 rounded-lg bg-red-100 text-red-600 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-900/50">
+                    <span class="material-symbols-outlined text-[18px]">block</span>
+                </button>
+            `);
+        }
+    } else if (canApprove && member.status === 'pending') {
+        // Approve button for mod role (non-admin) - only for pending members
         buttons.push(`
-            <button onclick="openDeleteModal(${member.id}, '${member.name}')" title="Xóa thành viên"
-                class="p-1.5 rounded-lg bg-red-100 text-red-600 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-900/50">
-                <span class="material-symbols-outlined text-[18px]">delete</span>
+            <button onclick="approveMember(${member.id}, '${member.name}')" title="Phê duyệt" 
+                class="p-1.5 rounded-lg bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-400 dark:hover:bg-green-900/50">
+                <span class="material-symbols-outlined text-[18px]">check_circle</span>
             </button>
         `);
     }
@@ -375,10 +385,10 @@ async function saveRole() {
     }
 }
 
-// Delete Modal
+// Deactivate Modal
 function openDeleteModal(userId, userName) {
     document.getElementById('delete-modal-user-id').value = userId;
-    document.getElementById('delete-modal-text').textContent = `Bạn có chắc chắn muốn xóa thành viên "${userName}"? Hành động này không thể hoàn tác.`;
+    document.getElementById('delete-modal-text').textContent = `Bạn có chắc chắn muốn vô hiệu hóa thành viên "${userName}"?`;
     document.getElementById('delete-modal').classList.remove('hidden');
 }
 

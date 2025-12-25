@@ -1,8 +1,12 @@
 <?php
 /**
- * Delete Member API
+ * Deactivate Member API (Soft Delete)
  * POST: user_id
  * Requires admin role only
+ * 
+ * This sets user status to 'pending' instead of deleting.
+ * The user's history and devices are preserved.
+ * User will not appear in transfer lists and cannot receive transfers.
  */
 
 require_once __DIR__ . '/../../config/database.php';
@@ -34,16 +38,16 @@ if ($userId <= 0) {
     jsonResponse(['success' => false, 'message' => 'ID người dùng không hợp lệ'], 400);
 }
 
-// Cannot delete self
+// Cannot deactivate self
 if ($userId === $currentUserId) {
-    jsonResponse(['success' => false, 'message' => 'Không thể xóa chính mình'], 400);
+    jsonResponse(['success' => false, 'message' => 'Không thể vô hiệu hóa chính mình'], 400);
 }
 
 try {
     $db = getDB();
     
-    // Check if user exists
-    $stmt = $db->prepare("SELECT id, name FROM users WHERE id = ?");
+    // Check if user exists and is approved
+    $stmt = $db->prepare("SELECT id, name, status FROM users WHERE id = ?");
     $stmt->execute([$userId]);
     $user = $stmt->fetch();
     
@@ -51,17 +55,23 @@ try {
         jsonResponse(['success' => false, 'message' => 'Không tìm thấy người dùng'], 404);
     }
     
-    // Transfer devices to null (unassign) before deletion
-    $stmt = $db->prepare("UPDATE devices SET current_holder_id = NULL WHERE current_holder_id = ?");
-    $stmt->execute([$userId]);
+    if ($user['status'] === 'pending') {
+        jsonResponse(['success' => false, 'message' => 'Người dùng đã ở trạng thái chờ duyệt'], 400);
+    }
     
-    // Delete user (cascades to user_aliases, transfer_requests, transfer_history)
-    $stmt = $db->prepare("DELETE FROM users WHERE id = ?");
+    // Cancel all pending transfer requests involving this user
+    $stmt = $db->prepare("UPDATE transfer_requests SET status = 'cancelled' WHERE status = 'pending' AND (from_user_id = ? OR to_user_id = ?)");
+    $stmt->execute([$userId, $userId]);
+    $cancelledCount = $stmt->rowCount();
+    
+    // Set user status to pending (soft delete)
+    // Devices and history are preserved
+    $stmt = $db->prepare("UPDATE users SET status = 'pending' WHERE id = ?");
     $stmt->execute([$userId]);
     
     jsonResponse([
         'success' => true,
-        'message' => 'Đã xóa thành viên ' . $user['name']
+        'message' => 'Đã vô hiệu hóa thành viên ' . $user['name']
     ]);
     
 } catch (PDOException $e) {

@@ -178,7 +178,7 @@ async function loadUsers() {
             return;
         }
         
-        let users = result.data.filter(u => u.id != currentUserId);
+        let users = result.data.filter(u => u.id != currentUserId && u.status === 'approved');
         
         // If device is broken, only show warehouse users
         if (device && device.status === 'broken') {
