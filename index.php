@@ -100,7 +100,7 @@ if (isset($_SESSION['user_id'])) {
                     <div id="login-error" class="hidden p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm"></div>
                     
                     <label class="block">
-                        <span class="text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5 block">Email công việc</span>
+                        <span class="text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5 block">Email</span>
                         <div class="relative">
                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
                                 <span class="material-symbols-outlined text-[20px]">mail</span>
@@ -147,7 +147,7 @@ if (isset($_SESSION['user_id'])) {
                     </label>
                     
                     <label class="block">
-                        <span class="text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5 block">Email công việc</span>
+                        <span class="text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5 block">Email</span>
                         <div class="relative">
                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
                                 <span class="material-symbols-outlined text-[20px]">mail</span>
@@ -162,7 +162,10 @@ if (isset($_SESSION['user_id'])) {
                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
                                 <span class="material-symbols-outlined text-[20px]">lock</span>
                             </div>
-                            <input name="password" type="password" required minlength="6" class="form-input block w-full pl-10 pr-3 py-3 rounded-lg border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-800/50 text-slate-900 dark:text-white placeholder-slate-400 focus:border-primary focus:ring-primary sm:text-sm" placeholder="Tối thiểu 6 ký tự"/>
+                            <input name="password" type="text" required minlength="6" id="register-password" class="form-input block w-full pl-10 pr-10 py-3 rounded-lg border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-800/50 text-slate-900 dark:text-white placeholder-slate-400 focus:border-primary focus:ring-primary sm:text-sm" placeholder="Tối thiểu 6 ký tự"/>
+                            <button type="button" id="toggle-register-password" class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-300">
+                                <span class="material-symbols-outlined text-[20px]">visibility_off</span>
+                            </button>
                         </div>
                     </label>
                     
@@ -269,6 +272,19 @@ document.getElementById('registerForm').addEventListener('submit', async (e) => 
     } catch (err) {
         errorEl.textContent = 'Đã xảy ra lỗi kết nối';
         errorEl.classList.remove('hidden');
+    }
+});
+
+// Toggle password visibility in register form
+document.getElementById('toggle-register-password').addEventListener('click', function() {
+    const passwordInput = document.getElementById('register-password');
+    const icon = this.querySelector('.material-symbols-outlined');
+    if (passwordInput.type === 'password') {
+        passwordInput.type = 'text';
+        icon.textContent = 'visibility_off';
+    } else {
+        passwordInput.type = 'password';
+        icon.textContent = 'visibility';
     }
 });
 </script>

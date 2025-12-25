@@ -142,6 +142,10 @@ function getRoleBadge($role) {
                         <p class="text-sm font-medium text-gray-900 dark:text-white"><?php echo htmlspecialchars($currentUser['name'] ?? 'User'); ?></p>
                         <p class="text-xs text-gray-500"><?php echo htmlspecialchars($currentUser['email'] ?? ''); ?></p>
                     </div>
+                    <button id="update-profile-btn" class="w-full text-left block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-700">
+                        <span class="material-symbols-outlined text-[16px] mr-2 align-middle">manage_accounts</span>
+                        Cập nhật thông tin
+                    </button>
                     <a href="api/auth/logout.php" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-700">
                         <span class="material-symbols-outlined text-[16px] mr-2 align-middle">logout</span>
                         Đăng xuất
@@ -176,6 +180,78 @@ function getRoleBadge($role) {
 </div>
 
 <script src="js/app.js"></script>
+
+<!-- Profile Update Modal -->
+<div id="profile-modal" class="fixed inset-0 z-[100] hidden">
+    <div class="fixed inset-0 bg-black/50 backdrop-blur-sm" id="profile-modal-backdrop"></div>
+    <div class="fixed inset-0 flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-[#1a2632] rounded-xl shadow-2xl w-full max-w-md relative">
+            <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+                <h3 class="text-lg font-bold text-gray-900 dark:text-white">Cập nhật thông tin</h3>
+                <button id="close-profile-modal" class="p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors">
+                    <span class="material-symbols-outlined text-gray-500">close</span>
+                </button>
+            </div>
+            <form id="profile-form" class="p-6 space-y-4">
+                <div id="profile-message" class="hidden p-3 rounded-lg text-sm"></div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Email</label>
+                    <input type="email" value="<?php echo htmlspecialchars($currentUser['email'] ?? ''); ?>" disabled 
+                           class="form-input block w-full py-2.5 px-3 rounded-lg border-gray-200 dark:border-slate-600 bg-gray-100 dark:bg-slate-700 text-gray-500 dark:text-gray-400 cursor-not-allowed sm:text-sm"/>
+                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Email không thể thay đổi</p>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Tên hiển thị</label>
+                    <input type="text" name="name" id="profile-name" required
+                           value="<?php echo htmlspecialchars($currentUser['name'] ?? ''); ?>"
+                           class="form-input block w-full py-2.5 px-3 rounded-lg border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-gray-900 dark:text-white focus:border-primary focus:ring-primary sm:text-sm"/>
+                </div>
+                
+                <div class="pt-2 border-t border-gray-100 dark:border-gray-700">
+                    <p class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Đổi mật khẩu (tùy chọn)</p>
+                    
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">Mật khẩu hiện tại</label>
+                            <div class="relative">
+                                <input type="password" name="current_password" id="profile-current-password"
+                                       class="form-input block w-full py-2.5 px-3 pr-10 rounded-lg border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-gray-900 dark:text-white focus:border-primary focus:ring-primary sm:text-sm"
+                                       placeholder="Nhập mật khẩu hiện tại"/>
+                                <button type="button" class="toggle-password absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600">
+                                    <span class="material-symbols-outlined text-[20px]">visibility</span>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">Mật khẩu mới</label>
+                            <div class="relative">
+                                <input type="password" name="new_password" id="profile-new-password" minlength="6"
+                                       class="form-input block w-full py-2.5 px-3 pr-10 rounded-lg border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-gray-900 dark:text-white focus:border-primary focus:ring-primary sm:text-sm"
+                                       placeholder="Tối thiểu 6 ký tự"/>
+                                <button type="button" class="toggle-password absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600">
+                                    <span class="material-symbols-outlined text-[20px]">visibility</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="flex gap-3 pt-4">
+                    <button type="button" id="cancel-profile-btn" class="flex-1 py-2.5 px-4 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-medium hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors">
+                        Hủy
+                    </button>
+                    <button type="submit" class="flex-1 py-2.5 px-4 rounded-lg bg-primary hover:bg-blue-600 text-white font-medium transition-colors">
+                        Lưu thay đổi
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <script>
 // Mobile menu toggle
 document.addEventListener('DOMContentLoaded', function() {
@@ -212,5 +288,104 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+    
+    // Profile modal handling
+    const profileModal = document.getElementById('profile-modal');
+    const updateProfileBtn = document.getElementById('update-profile-btn');
+    const closeProfileModal = document.getElementById('close-profile-modal');
+    const cancelProfileBtn = document.getElementById('cancel-profile-btn');
+    const profileModalBackdrop = document.getElementById('profile-modal-backdrop');
+    const profileForm = document.getElementById('profile-form');
+    const profileMessage = document.getElementById('profile-message');
+    
+    function openProfileModal() {
+        profileModal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+        // Close user menu dropdown
+        document.getElementById('user-menu-dropdown').classList.add('hidden');
+    }
+    
+    function closeProfileModalFn() {
+        profileModal.classList.add('hidden');
+        document.body.style.overflow = '';
+        profileMessage.classList.add('hidden');
+        profileForm.reset();
+        document.getElementById('profile-name').value = '<?php echo htmlspecialchars($currentUser['name'] ?? '', ENT_QUOTES); ?>';
+    }
+    
+    if (updateProfileBtn) {
+        updateProfileBtn.addEventListener('click', openProfileModal);
+    }
+    
+    if (closeProfileModal) {
+        closeProfileModal.addEventListener('click', closeProfileModalFn);
+    }
+    
+    if (cancelProfileBtn) {
+        cancelProfileBtn.addEventListener('click', closeProfileModalFn);
+    }
+    
+    if (profileModalBackdrop) {
+        profileModalBackdrop.addEventListener('click', closeProfileModalFn);
+    }
+    
+    // Toggle password visibility
+    document.querySelectorAll('.toggle-password').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const input = this.parentElement.querySelector('input');
+            const icon = this.querySelector('.material-symbols-outlined');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.textContent = 'visibility_off';
+            } else {
+                input.type = 'password';
+                icon.textContent = 'visibility';
+            }
+        });
+    });
+    
+    // Profile form submission
+    if (profileForm) {
+        profileForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const name = document.getElementById('profile-name').value.trim();
+            const currentPassword = document.getElementById('profile-current-password').value;
+            const newPassword = document.getElementById('profile-new-password').value;
+            
+            try {
+                const res = await fetch('api/members/update-profile.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: name,
+                        current_password: currentPassword,
+                        new_password: newPassword
+                    })
+                });
+                const data = await res.json();
+                
+                if (data.success) {
+                    profileMessage.textContent = data.message;
+                    profileMessage.classList.remove('hidden', 'bg-red-50', 'border-red-200', 'text-red-700');
+                    profileMessage.classList.add('bg-green-50', 'border', 'border-green-200', 'text-green-700');
+                    
+                    // Update displayed name
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1000);
+                } else {
+                    profileMessage.textContent = data.message;
+                    profileMessage.classList.remove('hidden', 'bg-green-50', 'border-green-200', 'text-green-700');
+                    profileMessage.classList.add('bg-red-50', 'border', 'border-red-200', 'text-red-700');
+                }
+            } catch (err) {
+                profileMessage.textContent = 'Đã xảy ra lỗi kết nối';
+                profileMessage.classList.remove('hidden', 'bg-green-50', 'border-green-200', 'text-green-700');
+                profileMessage.classList.add('bg-red-50', 'border', 'border-red-200', 'text-red-700');
+            }
+        });
+    }
 });
 </script>
+
