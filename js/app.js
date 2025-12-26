@@ -77,7 +77,8 @@ function formatDate(dateString) {
 
 // Format relative time
 function timeAgo(dateString) {
-    const date = new Date(dateString);
+    const localDate = dateString.replace(' ', 'T');
+    const date = new Date(localDate);
     const now = new Date();
     const diff = Math.floor((now - date) / 1000);
 
