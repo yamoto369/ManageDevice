@@ -114,8 +114,11 @@ async function loadDevices() {
             <tr class="group hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
                 <td class="px-6 py-4">
                     <div class="flex items-center gap-3">
-                        <div class="p-2 rounded-lg bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300">
-                            <span class="material-symbols-outlined text-[20px]">${getDeviceIcon(device.name)}</span>
+                        <div class="size-10 rounded-lg bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 overflow-hidden flex items-center justify-center flex-shrink-0">
+                            ${device.image ? 
+                                `<img src="${device.image}" alt="${device.name}" class="w-full h-full object-cover">` :
+                                `<span class="material-symbols-outlined text-[20px]">${getDeviceIcon(device.name)}</span>`
+                            }
                         </div>
                         <div>
                             <a href="device-history.php?id=${device.id}" class="text-sm font-semibold text-[#0d141b] dark:text-white hover:text-primary cursor-pointer">${device.name}</a>

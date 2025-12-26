@@ -87,8 +87,11 @@ async function loadDeviceHistory() {
         document.getElementById('device-header').innerHTML = `
             <div class="flex flex-col md:flex-row gap-6 items-start md:items-center justify-between">
                 <div class="flex gap-5 items-center">
-                    <div class="relative bg-slate-100 dark:bg-slate-700 rounded-lg h-24 w-32 flex items-center justify-center">
-                        <span class="material-symbols-outlined text-4xl text-slate-400">${getDeviceIcon(device.name)}</span>
+                    <div class="relative bg-slate-100 dark:bg-slate-700 rounded-lg h-24 w-32 flex items-center justify-center overflow-hidden">
+                        ${device.image ? 
+                            `<img src="${device.image}" alt="${device.name}" class="h-full w-full object-cover">` :
+                            `<span class="material-symbols-outlined text-4xl text-slate-400">${getDeviceIcon(device.name)}</span>`
+                        }
                     </div>
                     <div class="flex flex-col gap-1">
                         <h2 class="text-slate-900 dark:text-white text-2xl font-bold tracking-tight">${device.name}</h2>
