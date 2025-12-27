@@ -60,8 +60,13 @@ if (isset($_SESSION['user_id'])) {
     <div class="w-full max-w-5xl bg-white dark:bg-[#1a2634] rounded-xl shadow-lg border border-[#e7edf3] dark:border-slate-800 overflow-hidden flex flex-col md:flex-row min-h-[600px]">
         
         <!-- Left Column: Branding -->
-        <div class="hidden md:flex md:w-1/2 bg-gradient-to-br from-primary to-blue-600 relative overflow-hidden">
-            <div class="absolute inset-0 bg-black/20"></div>
+        <div class="hidden md:flex md:w-1/2 relative overflow-hidden bg-primary">
+            <!-- Background Image with Blur -->
+            <div class="absolute inset-0">
+                <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuAtS4a3TBY7Qnr47rCau9lbt01qsslPjbnS3e7oxh6hOvE6ochTZltSbHw3XxSpwKzZLrjNsiOTyXIqC1SY6cypKrqjbwmLYRb1blLqszmUE2go_5ViJD32PLnxR7pW9jeZjymIQFWTE7Nh43FMbZbAazhbXbAINyEAPGw1z21CcraZ1-204ghImIsdsaMGGfKwRc4ItBOaNtCs4gLqJqJV0XrP8AZIKqXpSVYv99JcGjgQCbixNtQfuHdeRbkUY6pwL5WhS_MB9O4" 
+                     class="w-full h-full object-cover blur-[3px] scale-110" alt="branding background">
+                <div class="absolute inset-0 bg-black/10"></div>
+            </div>
             <div class="relative z-10 flex flex-col justify-end p-12 h-full text-white">
                 <div class="mb-6">
                     <span class="inline-flex items-center justify-center p-3 bg-white/20 backdrop-blur-sm rounded-lg mb-6">
@@ -72,7 +77,7 @@ if (isset($_SESSION['user_id'])) {
                 </div>
                 <div class="flex items-center gap-2 text-sm text-slate-300">
                     <span class="material-symbols-outlined text-base">security</span>
-                    <span>Bảo mật nội bộ © 2024</span>
+                    <span>Bảo mật nội bộ © 2026</span>
                 </div>
             </div>
         </div>
