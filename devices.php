@@ -121,7 +121,7 @@ async function loadDevices() {
                             }
                         </div>
                         <div>
-                            <a href="device-history.php?id=${device.id}" class="text-sm font-semibold text-[#0d141b] dark:text-white hover:text-primary cursor-pointer">${device.name}</a>
+                            <a href="javascript:void(0)" onclick="showDeviceDetail(${device.id})" class="text-sm font-semibold text-[#0d141b] dark:text-white hover:text-primary cursor-pointer">${device.name}</a>
                             <p class="text-xs text-slate-500">${device.manufacturer || ''}</p>
                         </div>
                     </div>
@@ -197,6 +197,57 @@ async function loadDevices() {
     }
 }
 
+// Device Detail Modal Functions
+async function showDeviceDetail(deviceId) {
+    const modal = document.getElementById('deviceDetailModal');
+    const content = document.getElementById('deviceDetailContent');
+    const loading = document.getElementById('deviceDetailLoading');
+    
+    modal.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+    loading.classList.remove('hidden');
+    content.classList.add('hidden');
+    
+    try {
+        const result = await API.get(`api/devices/get.php?id=${deviceId}`);
+        if (result.success && result.device) {
+            const device = result.device;
+            
+            // Populate image
+            const imgContainer = document.getElementById('detailImageContainer');
+            if (device.image) {
+                imgContainer.innerHTML = `<img src="${device.image}" alt="${device.name}" class="w-full max-h-[300px] object-contain rounded-lg border border-slate-200 dark:border-slate-700">`;
+                imgContainer.classList.remove('hidden');
+            } else {
+                imgContainer.classList.add('hidden');
+            }
+            
+            // Populate fields
+            document.getElementById('detail-name').textContent = device.name || '-';
+            document.getElementById('detail-manufacturer').textContent = device.manufacturer || '-';
+            document.getElementById('detail-imei').textContent = device.imei_sn || '-';
+            document.getElementById('detail-status').innerHTML = getStatusBadge(device.status);
+            document.getElementById('detail-description').textContent = device.description || 'Không có mô tả chi tiết.';
+            
+            // Show content
+            loading.classList.add('hidden');
+            content.classList.remove('hidden');
+        } else {
+            Toast.error('Không thể tải thông tin thiết bị');
+            closeDeviceDetail();
+        }
+    } catch (error) {
+        Toast.error('Đã có lỗi xảy ra');
+        closeDeviceDetail();
+    }
+}
+
+function closeDeviceDetail() {
+    const modal = document.getElementById('deviceDetailModal');
+    modal.classList.add('hidden');
+    document.body.style.overflow = '';
+}
+
 // Event listeners
 document.getElementById('search-input').addEventListener('input', debounce(() => {
     currentPage = 1;
@@ -236,5 +287,83 @@ onTransferStatusChange.push(loadDevices);
 // Load on page ready
 loadDevices();
 </script>
+
+<!-- Device Detail Modal -->
+<div id="deviceDetailModal" class="fixed inset-0 z-50 hidden">
+    <!-- Backdrop -->
+    <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeDeviceDetail()"></div>
+    
+    <!-- Modal Content -->
+    <div class="relative flex items-center justify-center min-h-screen p-4">
+        <div class="bg-white dark:bg-[#1a2632] w-full max-w-2xl rounded-2xl shadow-2xl border border-[#e7edf3] dark:border-slate-700 overflow-hidden transform transition-all">
+            <!-- Header -->
+            <div class="px-6 py-4 border-b border-[#e7edf3] dark:border-slate-700 flex items-center justify-between bg-slate-50 dark:bg-slate-800/50">
+                <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined text-primary">info</span>
+                    <h3 class="text-lg font-bold text-slate-900 dark:text-white">Thông tin chi tiết thiết bị</h3>
+                </div>
+                <button onclick="closeDeviceDetail()" class="p-2 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-full transition-colors text-slate-500 dark:text-slate-400">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            
+            <!-- Body -->
+            <div class="p-6">
+                <!-- Loading State -->
+                <div id="deviceDetailLoading" class="py-12 flex flex-col items-center justify-center gap-3">
+                    <div class="size-10 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
+                    <p class="text-slate-500 dark:text-slate-400 text-sm">Đang tải thông tin...</p>
+                </div>
+                
+                <!-- Content Section -->
+                <div id="deviceDetailContent" class="hidden space-y-6">
+                    <!-- Image Preview -->
+                    <div id="detailImageContainer" class="flex justify-center mb-6">
+                        <!-- Image will be inserted here -->
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+                        <!-- Device Name -->
+                        <div class="space-y-1">
+                            <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Tên thiết bị</p>
+                            <p id="detail-name" class="text-base font-medium text-slate-900 dark:text-white"></p>
+                        </div>
+                        
+                        <!-- Manufacturer -->
+                        <div class="space-y-1">
+                            <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Hãng sản xuất</p>
+                            <p id="detail-manufacturer" class="text-base font-medium text-slate-900 dark:text-white"></p>
+                        </div>
+                        
+                        <!-- IMEI/SN -->
+                        <div class="space-y-1">
+                            <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">IMEI / Serial Number</p>
+                            <p id="detail-imei" class="text-sm font-mono bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded inline-block text-slate-700 dark:text-slate-300"></p>
+                        </div>
+                        
+                        <!-- Status -->
+                        <div class="space-y-1">
+                            <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Trạng thái</p>
+                            <div id="detail-status"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Description -->
+                    <div class="space-y-1 pt-4 border-t border-slate-100 dark:border-slate-700">
+                        <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Mô tả chi tiết</p>
+                        <p id="detail-description" class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed whitespace-pre-line"></p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Footer -->
+            <div class="px-6 py-4 bg-slate-50 dark:bg-slate-800/50 border-t border-[#e7edf3] dark:border-slate-700 flex justify-end">
+                <button onclick="closeDeviceDetail()" class="px-6 py-2 rounded-lg bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors">
+                    Đóng
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <?php require_once 'includes/footer.php'; ?>
