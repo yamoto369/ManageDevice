@@ -230,6 +230,7 @@ const isEditMode = <?php echo $isEditMode ? 'true' : 'false'; ?>;
 const deviceId = <?php echo $deviceId; ?>;
 let selectedImageFile = null;
 let currentImagePath = null;
+let imageRemoved = false; // Track if user removed the existing image
 
 // Image Preview Elements
 const imagePreviewContainer = document.getElementById('imagePreviewContainer');
@@ -265,6 +266,10 @@ function hideImagePreview() {
     imagePreviewContainer.classList.add('hidden');
     imageUploadButtons.classList.remove('hidden');
     selectedImageFile = null;
+    // Mark image as removed if we had an existing image
+    if (currentImagePath) {
+        imageRemoved = true;
+    }
 }
 
 // Handle file selection
@@ -564,6 +569,11 @@ async function uploadImage(deviceIdToUpload) {
     });
 }
 
+// Delete image from server
+async function deleteImage(deviceIdToDelete) {
+    return API.post('api/devices/delete-image.php', { device_id: deviceIdToDelete });
+}
+
 // Handle remove image button
 document.getElementById('removeImage').addEventListener('click', () => {
     hideImagePreview();
@@ -626,11 +636,17 @@ document.getElementById('deviceForm').addEventListener('submit', async (e) => {
     }
     
     if (result.success) {
-        // Upload image if selected
+        // Handle image: upload new image or delete existing image
         if (selectedImageFile) {
             const uploadResult = await uploadImage(newDeviceId);
             if (!uploadResult.success) {
                 Toast.warning('Thiết bị đã lưu nhưng upload ảnh thất bại: ' + uploadResult.message);
+            }
+        } else if (isEditMode && imageRemoved && !selectedImageFile) {
+            // User removed the image and didn't select a new one
+            const deleteResult = await deleteImage(newDeviceId);
+            if (!deleteResult.success) {
+                Toast.warning('Thiết bị đã lưu nhưng xóa ảnh thất bại: ' + deleteResult.message);
             }
         }
         
