@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS users (
     name VARCHAR(255) NOT NULL,
     avatar VARCHAR(500) DEFAULT NULL,
     role ENUM('user', 'mod', 'admin', 'warehouse') NOT NULL DEFAULT 'user',
-    status ENUM('pending', 'approved') NOT NULL DEFAULT 'pending',
+    status ENUM('pending', 'approved', 'inactive') NOT NULL DEFAULT 'pending',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -142,4 +142,15 @@ ALTER TABLE devices MODIFY COLUMN status ENUM('available', 'broken') DEFAULT 'av
 
 -- Add warehouse role
 ALTER TABLE users MODIFY COLUMN role ENUM('user', 'mod', 'admin', 'warehouse') NOT NULL DEFAULT 'user';
+*/
+
+-- =====================================================================
+-- MIGRATION 4: Add inactive status (migration_inactive_status.sql)
+-- Run ONLY if you need to add inactive status for deactivated members
+-- =====================================================================
+/*
+-- Add inactive status to enable separate handling for:
+-- - pending: new registrations awaiting approval
+-- - inactive: members deactivated by admin
+ALTER TABLE users MODIFY COLUMN status ENUM('pending', 'approved', 'inactive') NOT NULL DEFAULT 'pending';
 */

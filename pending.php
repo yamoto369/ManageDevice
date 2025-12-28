@@ -1,7 +1,7 @@
 <?php
 /**
- * Pending Approval Page
- * Shown to users whose accounts are not yet approved
+ * Pending/Inactive Approval Page
+ * Shown to users whose accounts are not yet approved or have been deactivated
  */
 require_once 'config/database.php';
 
@@ -20,13 +20,16 @@ if ($user && $user['status'] === 'approved') {
     header('Location: devices.php');
     exit;
 }
+
+// Determine if user is pending (new) or inactive (deactivated)
+$isInactive = $user && $user['status'] === 'inactive';
 ?>
 <!DOCTYPE html>
 <html class="light" lang="vi">
 <head>
     <meta charset="utf-8"/>
     <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-    <title>Chờ phê duyệt - DeviceManager</title>
+    <title><?php echo $isInactive ? 'Tài khoản bị vô hiệu hóa' : 'Chờ phê duyệt'; ?> - DeviceManager</title>
     <link href="https://fonts.googleapis.com" rel="preconnect"/>
     <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
@@ -74,17 +77,29 @@ if ($user && $user['status'] === 'approved') {
 <main class="flex-grow flex items-center justify-center p-4 sm:p-6 lg:p-8">
     <div class="w-full max-w-md text-center">
         <div class="bg-white dark:bg-[#1a2634] rounded-2xl shadow-lg border border-[#e7edf3] dark:border-slate-800 p-8">
-            <!-- Pending Icon -->
+            <!-- Icon -->
+            <?php if ($isInactive): ?>
+            <div class="mx-auto w-20 h-20 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center mb-6">
+                <span class="material-symbols-outlined text-4xl text-red-600 dark:text-red-400">block</span>
+            </div>
+            <?php else: ?>
             <div class="mx-auto w-20 h-20 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center mb-6">
                 <span class="material-symbols-outlined text-4xl text-amber-600 dark:text-amber-400">hourglass_top</span>
             </div>
+            <?php endif; ?>
             
             <!-- Title -->
-            <h2 class="text-2xl font-bold text-slate-900 dark:text-white mb-3">Chờ phê duyệt</h2>
+            <h2 class="text-2xl font-bold text-slate-900 dark:text-white mb-3">
+                <?php echo $isInactive ? 'Tài khoản bị vô hiệu hóa' : 'Chờ phê duyệt'; ?>
+            </h2>
             
             <!-- Description -->
             <p class="text-slate-500 dark:text-slate-400 mb-6 leading-relaxed">
-                Tài khoản của bạn đã được tạo thành công. Vui lòng chờ quản trị viên phê duyệt để có thể sử dụng hệ thống.
+                <?php if ($isInactive): ?>
+                    Tài khoản của bạn đã bị vô hiệu hóa bởi quản trị viên. Vui lòng liên hệ admin để được kích hoạt lại.
+                <?php else: ?>
+                    Tài khoản của bạn đã được tạo thành công. Vui lòng chờ quản trị viên phê duyệt để có thể sử dụng hệ thống.
+                <?php endif; ?>
             </p>
             
             <!-- User Info -->
@@ -101,6 +116,12 @@ if ($user && $user['status'] === 'approved') {
             </div>
             
             <!-- Status Badge -->
+            <?php if ($isInactive): ?>
+            <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 text-sm font-medium">
+                <span class="material-symbols-outlined text-[16px]">block</span>
+                Đã bị vô hiệu hóa
+            </div>
+            <?php else: ?>
             <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 text-sm font-medium">
                 <span class="relative flex h-2 w-2">
                     <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
@@ -108,10 +129,15 @@ if ($user && $user['status'] === 'approved') {
                 </span>
                 Đang chờ xử lý
             </div>
+            <?php endif; ?>
             
             <!-- Refresh hint -->
             <p class="mt-6 text-xs text-slate-400">
-                Trang sẽ tự động làm mới khi tài khoản được phê duyệt
+                <?php if ($isInactive): ?>
+                    Trang sẽ tự động làm mới khi tài khoản được kích hoạt lại
+                <?php else: ?>
+                    Trang sẽ tự động làm mới khi tài khoản được phê duyệt
+                <?php endif; ?>
             </p>
         </div>
     </div>
@@ -130,3 +156,4 @@ setInterval(() => {
 </script>
 </body>
 </html>
+

@@ -11,10 +11,19 @@ if (!defined('PAGE_TITLE')) {
 $currentUser = getCurrentUser();
 $currentPage = basename($_SERVER['PHP_SELF'], '.php');
 
-// Redirect pending users to pending page (except on pending.php itself)
-if ($currentUser && $currentUser['status'] === 'pending' && $currentPage !== 'pending') {
+// Redirect pending/inactive users to pending page (except on pending.php itself)
+if ($currentUser && $currentUser['status'] !== 'approved' && $currentPage !== 'pending') {
     header('Location: pending.php');
     exit;
+}
+
+// Count pending members for badge (only for mod/admin)
+$pendingMembersCount = 0;
+if ($currentUser && $currentUser['status'] === 'approved' && in_array($currentUser['role'], ['mod', 'admin'])) {
+    $db = getDB();
+    $stmt = $db->prepare("SELECT COUNT(*) as count FROM users WHERE status = 'pending'");
+    $stmt->execute();
+    $pendingMembersCount = $stmt->fetch()['count'];
 }
 
 // Helper function to get role badge HTML
@@ -93,7 +102,12 @@ function getRoleBadge($role) {
         <nav class="hidden md:flex items-center gap-9">
             <a class="text-sm font-medium leading-normal transition-colors <?php echo $currentPage == 'devices' ? 'text-[#0d141b] dark:text-slate-200 font-bold border-b-2 border-primary' : 'text-[#0d141b] dark:text-slate-200 hover:text-primary'; ?>" href="devices.php">Thiết bị</a>
             <a class="text-sm font-medium leading-normal transition-colors <?php echo $currentPage == 'pending-transfers' ? 'text-[#0d141b] dark:text-slate-200 font-bold border-b-2 border-primary' : 'text-[#0d141b] dark:text-slate-200 hover:text-primary'; ?>" href="pending-transfers.php">Yêu cầu</a>
-            <a class="text-sm font-medium leading-normal transition-colors <?php echo $currentPage == 'members' ? 'text-[#0d141b] dark:text-slate-200 font-bold border-b-2 border-primary' : 'text-[#0d141b] dark:text-slate-200 hover:text-primary'; ?>" href="members.php">Thành viên</a>
+            <a class="text-sm font-medium leading-normal transition-colors flex items-center gap-1.5 <?php echo $currentPage == 'members' ? 'text-[#0d141b] dark:text-slate-200 font-bold border-b-2 border-primary' : 'text-[#0d141b] dark:text-slate-200 hover:text-primary'; ?>" href="members.php">
+                Thành viên
+                <?php if ($pendingMembersCount > 0): ?>
+                <span class="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-bold rounded-full bg-red-500 text-white"><?php echo $pendingMembersCount > 99 ? '99+' : $pendingMembersCount; ?></span>
+                <?php endif; ?>
+            </a>
         </nav>
         <div class="flex items-center gap-4">
             <!-- Notification Bell -->
@@ -169,7 +183,10 @@ function getRoleBadge($role) {
         </a>
         <a class="flex items-center gap-3 px-6 py-3 text-base font-medium transition-colors <?php echo $currentPage == 'members' ? 'text-primary bg-primary/5 border-l-4 border-primary' : 'text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 border-l-4 border-transparent'; ?>" href="members.php">
             <span class="material-symbols-outlined text-xl">group</span>
-            Thành viên
+            <span class="flex-1">Thành viên</span>
+            <?php if ($pendingMembersCount > 0): ?>
+            <span class="inline-flex items-center justify-center min-w-[20px] h-[20px] px-1.5 text-[10px] font-bold rounded-full bg-red-500 text-white"><?php echo $pendingMembersCount > 99 ? '99+' : $pendingMembersCount; ?></span>
+            <?php endif; ?>
         </a>
         <div class="border-t border-slate-100 dark:border-slate-700 my-2"></div>
         <a class="flex items-center gap-3 px-6 py-3 text-base font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors border-l-4 border-transparent" href="api/auth/logout.php">

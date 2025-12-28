@@ -73,9 +73,15 @@ try {
         $member['device_count'] = count($member['devices']);
     }
     
+    // Count pending members (for header badge)
+    $stmt = $db->prepare("SELECT COUNT(*) as count FROM users WHERE status = 'pending'");
+    $stmt->execute();
+    $pendingCount = $stmt->fetch()['count'];
+    
     jsonResponse([
         'success' => true,
         'data' => $members,
+        'pending_count' => $pendingCount,
         'pagination' => [
             'page' => $page,
             'limit' => $limit,

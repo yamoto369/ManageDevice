@@ -4,9 +4,10 @@
  * POST: user_id
  * Requires admin role only
  * 
- * This sets user status to 'pending' instead of deleting.
- * The user's history and devices are preserved.
+ * This sets user status to 'inactive' instead of deleting.
+ * The user's history is preserved.
  * User will not appear in transfer lists and cannot receive transfers.
+ * Cannot deactivate if user is holding devices.
  */
 
 require_once __DIR__ . '/../../config/database.php';
@@ -55,8 +56,20 @@ try {
         jsonResponse(['success' => false, 'message' => 'Không tìm thấy người dùng'], 404);
     }
     
-    if ($user['status'] === 'pending') {
-        jsonResponse(['success' => false, 'message' => 'Người dùng đã ở trạng thái chờ duyệt'], 400);
+    if ($user['status'] !== 'approved') {
+        jsonResponse(['success' => false, 'message' => 'Chỉ có thể vô hiệu hóa thành viên đã được phê duyệt'], 400);
+    }
+    
+    // Check if user is holding any devices
+    $stmt = $db->prepare("SELECT COUNT(*) as count FROM devices WHERE current_holder_id = ?");
+    $stmt->execute([$userId]);
+    $deviceCount = $stmt->fetch()['count'];
+    
+    if ($deviceCount > 0) {
+        jsonResponse([
+            'success' => false, 
+            'message' => 'Thành viên đang giữ ' . $deviceCount . ' thiết bị. Vui lòng chuyển hết thiết bị sang người khác trước khi vô hiệu hóa.'
+        ], 400);
     }
     
     // Cancel all pending transfer requests involving this user
@@ -64,9 +77,9 @@ try {
     $stmt->execute([$userId, $userId]);
     $cancelledCount = $stmt->rowCount();
     
-    // Set user status to pending (soft delete)
-    // Devices and history are preserved
-    $stmt = $db->prepare("UPDATE users SET status = 'pending' WHERE id = ?");
+    // Set user status to inactive
+    // History is preserved
+    $stmt = $db->prepare("UPDATE users SET status = 'inactive' WHERE id = ?");
     $stmt->execute([$userId]);
     
     jsonResponse([

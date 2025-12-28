@@ -178,7 +178,7 @@ $canManageRoles = isAdmin();
             <h3 class="text-lg font-bold text-slate-900 dark:text-white">Vô hiệu hóa tài khoản</h3>
         </div>
         <p id="delete-modal-text" class="text-slate-600 dark:text-slate-400 mb-2">Bạn có chắc chắn muốn vô hiệu hóa thành viên này?</p>
-        <p class="text-sm text-slate-500 dark:text-slate-500 mb-6">Lịch sử và thiết bị của tài khoản sẽ được giữ nguyên. Tài khoản sẽ chuyển về trạng thái chờ duyệt và không thể nhận transfer.</p>
+        <p class="text-sm text-slate-500 dark:text-slate-500 mb-6">Lịch sử của tài khoản sẽ được giữ nguyên. Tài khoản sẽ bị vô hiệu hóa và không thể đăng nhập hoặc tham gia transfer. Bạn có thể kích hoạt lại sau.</p>
         <input type="hidden" id="delete-modal-user-id">
         <div class="flex gap-3 justify-end">
             <button onclick="closeDeleteModal()" class="px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 font-medium hover:bg-slate-100 dark:hover:bg-slate-700">Hủy</button>
@@ -208,6 +208,8 @@ function getRoleBadge(role) {
 function getStatusBadge(status) {
     if (status === 'approved') {
         return '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"><span class="material-symbols-outlined text-[12px]">check_circle</span>Đã duyệt</span>';
+    } else if (status === 'inactive') {
+        return '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"><span class="material-symbols-outlined text-[12px]">block</span>Vô hiệu hóa</span>';
     }
     return '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400"><span class="material-symbols-outlined text-[12px]">schedule</span>Chờ duyệt</span>';
 }
@@ -233,7 +235,7 @@ function getActionButtons(member) {
             </button>
         `);
         
-        // Approve/Deactivate button at same position (admin only)
+        // Approve/Deactivate/Activate buttons (admin only)
         if (member.status === 'pending') {
             // Approve button for pending members
             buttons.push(`
@@ -248,6 +250,14 @@ function getActionButtons(member) {
                 <button onclick="openDeleteModal(${member.id}, '${member.name}')" title="Vô hiệu hóa"
                     class="p-1.5 rounded-lg bg-red-100 text-red-600 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-900/50">
                     <span class="material-symbols-outlined text-[18px]">block</span>
+                </button>
+            `);
+        } else if (member.status === 'inactive') {
+            // Activate button for inactive members
+            buttons.push(`
+                <button onclick="activateMember(${member.id}, '${member.name}')" title="Kích hoạt lại"
+                    class="p-1.5 rounded-lg bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-400 dark:hover:bg-green-900/50">
+                    <span class="material-symbols-outlined text-[18px]">replay</span>
                 </button>
             `);
         }
@@ -351,6 +361,17 @@ async function loadMembers() {
 // Approve member
 async function approveMember(userId, userName) {
     const result = await API.post('api/members/approve.php', { user_id: userId });
+    if (result.success) {
+        Toast.success(result.message);
+        loadMembers();
+    } else {
+        Toast.error(result.message);
+    }
+}
+
+// Activate member (reactivate from inactive status)
+async function activateMember(userId, userName) {
+    const result = await API.post('api/members/activate.php', { user_id: userId });
     if (result.success) {
         Toast.success(result.message);
         loadMembers();
