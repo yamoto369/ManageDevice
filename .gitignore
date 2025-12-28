@@ -1,0 +1,23 @@
+# Dependencies
+node_modules/
+
+# Build cache
+.cache/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# Optional: Uncomment if you want to exclude the built CSS
+# (but then you need to run npm run build:css after cloning)
+# css/tailwind.css
